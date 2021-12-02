@@ -5,6 +5,7 @@ import psycopg2
 import pydeck as pdk
 import numpy as np
 from geopy.geocoders import Nominatim
+from PIL import Image
 import json
 
 def query(sql: str):
@@ -27,6 +28,10 @@ def query(sql: str):
     df = pd.DataFrame(data=data, columns=column_names)
     return df
 
+# empty place holder
+img = Image.open('bg.PNG')
+placeholder = st.empty()
+placeholder.image(img, width = 660)
 
 # left sidebar
 
@@ -36,9 +41,13 @@ st.sidebar.markdown("## China Railway")
 From = st.sidebar.selectbox("From", stations)
 To = st.sidebar.selectbox("To", stations)
 date = st.sidebar.date_input("Date", datetime.date.today())
-train_no = "SELECT train_no from remaningseats r1, remainingseats r2\
-        where r1.train_no = r2.trian_no and r1.date = " + date + "and\
-        r1.station_name = " + From + "and r2.station_name = " + To + "r2.date >= r1.date"
+options = st.sidebar.multiselect("Preferred type", ['Business-class', 'first-class', 'second-class', 'soft-sleeper', 'hard-sleeper', 'hard-seat', 'standing ticket'])
+transfer = st.sidebar.checkbox("Transfer accepted")
+
+# train_no = "SELECT train_no from remaningseats r1, remainingseats r2\
+#         where r1.train_no = r2.trian_no and r1.date = " + date + "and\
+#         r1.station_name = " + From + "and r2.station_name = " + To + "r2.date >= r1.date"
+
 #ticket = "SELECT min(A9), min(P),min(M),min(O),min(A6),min(A4),min(A3),min(A2),min(A1),min(WZ),min(MIN) FROM remainingseats\r\n" + 
 #			"where \r\n" + 
 #			"train_no=?\r\n" + 
@@ -50,6 +59,8 @@ train_no = "SELECT train_no from remaningseats r1, remainingseats r2\
 search = st.sidebar.button('Search')
 # search button listener
 if search:
+    print(date)
+    placeholder.empty()
     st.write(f"select * from time_price where station_name = '{From}'")
     trains = query(f"select * from time_price where station_name = '{From}' limit 10")
     st.dataframe(trains)
@@ -76,34 +87,34 @@ if search:
         columns=['lat', 'lon'])
     #df = [{'from':{coordinates:[loc_from.latitude, loc_from.longitude]},'to':{coordinates: [loc_from.latitude, loc_from.longitude]}}]
 
-
-    st.pydeck_chart(pdk.Deck(
-         map_style='mapbox://styles/mapbox/navigation-night-v1',
-         #map_style='https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-         initial_view_state=pdk.ViewState(
-             latitude=31,
-             longitude=115,
-             zoom=2.5,
-             pitch=0,
-         ),
-         layers=[
-             pdk.Layer(
-                 'ScatterplotLayer',
-                 data=df,
-                 get_position='[lon, lat]',
-                 get_fill_color='[200, 30, 0, 160]',
-                 get_radius=40000,
+    with st.expander("Show the trip"):
+        st.pydeck_chart(pdk.Deck(
+             map_style='mapbox://styles/mapbox/navigation-night-v1',
+             #map_style='https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+             initial_view_state=pdk.ViewState(
+                 latitude=31,
+                 longitude=115,
+                 zoom=2.5,
+                 pitch=0,
              ),
-             pdk.Layer(
-                 'LineLayer',
-                 data=line,
-                 get_line_color='[200, 30, 0, 160]',
-                 get_sourcePosition='[from_lon, from_lat]',
-                 get_targetPosition='[to_lon, to_lat]',
-                 get_color='[200, 30, 0, 160]',
-                 get_width=5,
-             ),
-         ],
-     ))
+             layers=[
+                 pdk.Layer(
+                     'ScatterplotLayer',
+                     data=df,
+                     get_position='[lon, lat]',
+                     get_fill_color='[200, 30, 0, 160]',
+                     get_radius=40000,
+                 ),
+                 pdk.Layer(
+                     'LineLayer',
+                     data=line,
+                     get_line_color='[200, 30, 0, 160]',
+                     get_sourcePosition='[from_lon, from_lat]',
+                     get_targetPosition='[to_lon, to_lat]',
+                     get_color='[200, 30, 0, 160]',
+                     get_width=5,
+                 ),
+             ],
+         ))
 
 
