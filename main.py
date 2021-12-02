@@ -45,14 +45,17 @@ date = st.sidebar.date_input("Date", datetime.date.today())
 options = st.sidebar.multiselect("Preferred type", ['Business-class', 'first-class', 'second-class', 'soft-sleeper', 'hard-sleeper', 'hard-seat', 'standing ticket'])
 transfer = st.sidebar.checkbox("Transfer accepted")
 
+# print(type(date))
+
 # train_no = "SELECT train_no from remaningseats r1, remainingseats r2\
 #         where r1.train_no = r2.trian_no and r1.date = " + date + "and\
 #         r1.station_name = " + From + "and r2.station_name = " + To + "r2.date >= r1.date"
 
 
-train_no = "Select r1.train_no from remainingseats r1, remainingseats r2\
-        where r1.train_no = r2.train_no and r1.date = " + date + "and\
-        r1.station_name = " + From + "and r2.station_name = " + To + "r2.date >= r1.date"
+train_no = f"Select r1.train_no from remainingseats r1, remainingseats r2\
+        where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' and\
+        r1.station_name = '{From}' and r2.station_name = '{To}' and r2.date >= r1.date"
+
 #ticket = "SELECT min(A9), min(P),min(M),min(O),min(A6),min(A4),min(A3),min(A2),min(A1),min(WZ),min(MIN) FROM remainingseats\r\n" + 
 #			"where \r\n" + 
 #			"train_no=?\r\n" + 
@@ -62,12 +65,15 @@ train_no = "Select r1.train_no from remainingseats r1, remainingseats r2\
 #			"and station_no < \r\n" + 
 #			"(select station_no from time_price where train_no=? and  station_name=?)"
 search = st.sidebar.button('Search')
+
 # search button listener
 if search:
-    print(date)
     placeholder.empty()
-    st.write(f"select * from time_price where station_name = '{From}'")
-    trains = query(f"select * from time_price where station_name = '{From}' limit 10")
+    # st.write(f"select * from time_price where station_name = '{From}'")
+    # trains = query(f"select * from time_price where station_name = '{From}' limit 10")
+    # st.dataframe(trains)
+    st.write(train_no)
+    trains = query(train_no)
     st.dataframe(trains)
 
     From_ch = From[From.find('(')+1 : -1]
