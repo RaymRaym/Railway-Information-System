@@ -36,9 +36,9 @@ st.sidebar.markdown("## China Railway")
 From = st.sidebar.selectbox("From", stations)
 To = st.sidebar.selectbox("To", stations)
 date = st.sidebar.date_input("Date", datetime.date.today())
-train_no = "SELECT train_no, from (SELECT train_no from remaningseats r1, remainingseats r2\
+train_no = "SELECT train_no from remaningseats r1, remainingseats r2\
         where r1.train_no = r2.trian_no and r1.date = " + date + "and\
-        r1.station_name = " + From + "and r2.station_name = " + To + "r2.date >= r1.date) train_no_options"
+        r1.station_name = " + From + "and r2.station_name = " + To + "r2.date >= r1.date"
 #ticket = "SELECT min(A9), min(P),min(M),min(O),min(A6),min(A4),min(A3),min(A2),min(A1),min(WZ),min(MIN) FROM remainingseats\r\n" + 
 #			"where \r\n" + 
 #			"train_no=?\r\n" + 
