@@ -68,6 +68,7 @@ if search:
 
     st.pydeck_chart(pdk.Deck(
          map_style='mapbox://styles/mapbox/navigation-night-v1',
+         #map_style='https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
          initial_view_state=pdk.ViewState(
              latitude=31,
              longitude=115,
