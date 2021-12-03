@@ -31,11 +31,11 @@ def query(sql: str):
 # empty place holder
 img = Image.open('bg.PNG')
 placeholder = st.empty()
-placeholder.image(img, width = 660)
+placeholder.image(img, width=660)
 
 # left sidebar
 
-stations = query("select name from station;")
+stations = query("select name from station order by name;")
 
 st.sidebar.markdown("## China Railway")
 From = st.sidebar.selectbox("From", stations)
@@ -74,6 +74,13 @@ if search:
     # st.dataframe(trains)
     st.write(train_no)
     trains = query(train_no)
+    print(type(trains))
+    col1, col2 = st.columns([1, 1])
+    for row in trains.iterrows():
+        col1.subheader(row[1])
+        print(type(row[1]))
+        #st.write(f'String{row[0]}')
+        col2.button('Buy', key=f'String{row[0]}')
     st.dataframe(trains)
 
     From_ch = From[From.find('(')+1 : -1]
