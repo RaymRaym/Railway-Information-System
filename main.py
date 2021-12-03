@@ -52,10 +52,19 @@ train_no = f"Select r1.train_no from remainingseats r1, remainingseats r2\
         r1.station_name = '{From}' and r2.station_name = '{To}' and r2.date >= r1.date"
 
 for train in train_no:
-    stations = f"Select station_name, station_no, arrive_time from time_price where train_no = '{train}'\
-            and station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
-            and station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
-        
+    stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
+            and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
+            and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
+
+    seats_remains_price = f"select r.station_no, r.date, min(r.a9) as seat_a9,\
+            sum(tp.a9) as price_a9, min(r.a6) as seat_a6, sum(tp.a6) as price_a6, min(r.a4) as seat_a4, sum(tp.a4) as price_a4,\
+            min(r.a3) as seat_a3, sum(tp.a3) as price_a3, min(r.a1) as seat_a1, sum(tp.a1) as price_a1, min(r.wz) as seat_wz, sum(tp.wz) as price_wz,\
+            min(r.p) as seat_p, sum(tp.p) as price_p, min(r.m) as seat_m, sum(tp.m) as price_m, min(r.o) as seat_o, sum(tp.o) as price_o\
+            from remainingseats r, time_price tp where tp.train_no = '{train}'\
+            and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
+            and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}' and tp.station_no = r.station_no\
+            and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
+            group by r.station_no, r.date"
 #ticket = "SELECT min(A9), min(P),min(M),min(O),min(A6),min(A4),min(A3),min(A2),min(A1),min(WZ),min(MIN) FROM remainingseats\r\n" + 
 #			"where \r\n" + 
 #			"train_no=?\r\n" + 
