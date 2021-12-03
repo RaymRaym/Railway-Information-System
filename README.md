@@ -1,7 +1,8 @@
 # RailwayInformationSystem
 A web data app [ PostgreSQL + Streamlit]
 
-
+TO-DO:
+1. 消息框，<数据异常>， <修改失败> etc.
 
 Problems so far:
 1. 查出来的train_no有重复的
