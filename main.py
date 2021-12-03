@@ -47,15 +47,15 @@ transfer = st.sidebar.checkbox("Transfer accepted")
 
 # print(type(date))
 
-# train_no = "SELECT train_no from remaningseats r1, remainingseats r2\
-#         where r1.train_no = r2.trian_no and r1.date = " + date + "and\
-#         r1.station_name = " + From + "and r2.station_name = " + To + "r2.date >= r1.date"
-
-
 train_no = f"Select r1.train_no from remainingseats r1, remainingseats r2\
         where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' and\
         r1.station_name = '{From}' and r2.station_name = '{To}' and r2.date >= r1.date"
 
+for train in train_no:
+    stations = f"Select station_name, station_no, arrive_time from time_price where train_no = '{train}'\
+            and station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
+            and station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
+        
 #ticket = "SELECT min(A9), min(P),min(M),min(O),min(A6),min(A4),min(A3),min(A2),min(A1),min(WZ),min(MIN) FROM remainingseats\r\n" + 
 #			"where \r\n" + 
 #			"train_no=?\r\n" + 
