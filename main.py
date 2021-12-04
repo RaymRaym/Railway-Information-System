@@ -50,9 +50,10 @@ options = st.sidebar.multiselect("Preferred type",
 transfer = st.sidebar.checkbox("Transfer accepted")
 
 # main query
-train_no = f"Select r1.train_no from remainingseats r1, remainingseats r2\
+
+train_no = f"Select distinct r1.train_no, t.code from remainingseats r1, remainingseats r2, train t\
         where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' and\
-        r1.station_name = '{From}' and r2.station_name = '{To}' and r2.date >= r1.date"
+        r1.station_name = '{From}' and r2.station_name = '{To}' and r2.date >= r1.date and r1.train_no = t.train_no"
 
 for train in train_no:
     stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
@@ -79,22 +80,29 @@ if search:
     # refresh
     placeholder.empty()
 
-    trains = query(train_no).values.tolist()   # pd datafram -> py list
+    try:
+        trains = query(train_no).values.tolist()   # pd datafram -> py list
+    except:
+        st.write("Sorry! Something went wrong with your query, please try again.")
 
     st.subheader(f"{From}->{To} on {date.strftime('%Y-%m-%d')}")
     st.caption(f" {len(trains)} results")
     print(trains[0])
 
     for item in trains:
-        train = item[0]
-        # query stations via this trip
-        stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
-                    and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
-                    and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
-        st.subheader(train)
-        with st.expander("detail"):
-            stations = query(stations) # dataframe
-            st.write(stations)
+        try:
+            train = item[0]
+            train_cod = item[1]
+            # query stations via this trip
+            stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
+                        and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
+                        and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
+            st.subheader(train)
+            with st.expander("detail"):
+                stations = query(stations) # dataframe
+                st.write(stations)
+        except:
+            st.write("Sorry! Something went wrong with your query, please try again.")
         # col2.button('Buy', key=f'String{row[0]}')
     # st.dataframe(trains)
 
