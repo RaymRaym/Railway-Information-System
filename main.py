@@ -87,13 +87,14 @@ if search:
 
     for item in trains:
         train = item[0]
+        #code = item[1]
         # query stations via this trip
         stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
                     and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
                     and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
         st.subheader(train)
         with st.expander("detail"):
-            stations = query(stations) # dataframe
+            stations = query(stations).values.tolist() # dataframe
             st.write(stations)
         # col2.button('Buy', key=f'String{row[0]}')
     # st.dataframe(trains)
