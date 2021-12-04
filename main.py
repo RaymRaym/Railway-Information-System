@@ -45,15 +45,25 @@ To = st.sidebar.selectbox("To", stations)
 date = st.sidebar.date_input("Date", datetime.date.today())
 
 options = st.sidebar.multiselect("Preferred type",
-                                 ['Business-class', 'first-class', 'second-class', 'soft-sleeper', 'hard-sleeper',
-                                  'hard-seat', 'standing ticket'])
+                                 ['High Speed', 'Regular'])
 transfer = st.sidebar.checkbox("Transfer accepted")
+
+# train_no = f"Select distinct r1.train_no, t.code from remainingseats r1, remainingseats r2, train t\
+#         where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' and\
+#         r1.station_name = '{From}' and r2.station_name = '{To}' and r2.date >= r1.date and r1.train_no = t.train_no"
 
 # main query
 
-train_no = f"Select distinct r1.train_no, t.code from remainingseats r1, remainingseats r2, train t\
-        where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' and\
-        r1.station_name = '{From}' and r2.station_name = '{To}' and r2.date >= r1.date and r1.train_no = t.train_no"
+train_no = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time \
+        from(Select distinct r1.train_no, t.code \
+             from remainingseats r1, remainingseats r2, train t \
+             where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
+             and r1.station_name = '{From}' and r2.station_name = '{To}'\
+            and r2.station_no >= r1.station_no and r1.train_no = t.train_no) x, time_price tp1, time_price tp2 \
+        where x.train_no = tp1.train_no\
+        and tp1.train_no = tp2.train_no\
+        and tp1.station_name='{From}'\
+        and tp2.station_name='{To}';"
 
 for train in train_no:
     stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
@@ -79,78 +89,136 @@ search = st.sidebar.button('Search')
 if search:
     # refresh
     placeholder.empty()
-
     try:
-        trains = query(train_no).values.tolist()   # pd datafram -> py list
+        trains = query(train_no).values.tolist()  # pd dataframe -> py list
     except:
         st.write("Sorry! Something went wrong with your query, please try again.")
 
-    st.subheader(f"{From}->{To} on {date.strftime('%Y-%m-%d')}")
-    st.caption(f" {len(trains)} results")
+    st.header(f"**_{From}_** -> **_{To}_** ")
+    st.header(f"**Depart on _{date.strftime('%Y-%m-%d')}_**")
+    st.caption(f" **{len(trains)} results**")
     print(trains[0])
 
     for item in trains:
-        try:
+
             train = item[0]
             train_cod = item[1]
+            depart_time = item[2]
+            arr_time = item[3]
+
             # query stations via this trip
             stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
                         and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
                         and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
-            st.subheader(train)
+
+            st.subheader(f"{train_cod}")
+            st.caption(f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_**")
             with st.expander("detail"):
-                stations = query(stations) # dataframe
-                st.write(stations)
-        except:
-            st.write("Sorry! Something went wrong with your query, please try again.")
+                try:
+                    stations = query(stations).values.tolist()  # dataframe
+                except:
+                    st.write("Sorry! Something went wrong with your query, please try again.")
+                col1, col2 = st.columns([3, 1])
+                for object in stations:
+                    station_no = object[1]
+                    station_name = object[0]
+                    arrive_time = object[2]
+                    col2.caption(f"{station_no} {station_name} **_{arrive_time.strftime('%H:%M')}_**")
+
+                From_ch = From[From.find('(') + 1: -1]
+                To_ch = To[To.find('(') + 1: -1]
+                print(From_ch)
+                print(To_ch)
+                gps = Nominatim(user_agent='http')
+                loc_from = gps.geocode(From_ch)
+                loc_to = gps.geocode(To_ch)
+                pts = [[loc_from.latitude, loc_from.longitude, loc_to.latitude, loc_to.longitude]]
+                dots = [[loc_from.latitude, loc_from.longitude], [loc_to.latitude, loc_to.longitude]]
+
+                line = pd.DataFrame(
+                    np.asarray(pts),
+                    columns=['from_lat', 'from_lon', 'to_lat', 'to_lon'])
+
+                df = pd.DataFrame(
+                    np.asarray(dots),
+                    columns=['lat', 'lon'])
+
+                col1.pydeck_chart(pdk.Deck(
+                    map_style='mapbox://styles/mapbox/navigation-night-v1',
+                    # map_style='https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+                    initial_view_state=pdk.ViewState(
+                        latitude=31,
+                        longitude=115,
+                        zoom=2.5,
+                        pitch=0,
+                    ),
+                    layers=[
+                        pdk.Layer(
+                            'ScatterplotLayer',
+                            data=df,
+                            get_position='[lon, lat]',
+                            get_fill_color='[200, 30, 0, 160]',
+                            get_radius=40000,
+                        ),
+                        pdk.Layer(
+                            'LineLayer',
+                            data=line,
+                            get_line_color='[200, 30, 0, 160]',
+                            get_sourcePosition='[from_lon, from_lat]',
+                            get_targetPosition='[to_lon, to_lat]',
+                            get_color='[200, 30, 0, 160]',
+                            get_width=5,
+                        ),
+                    ],
+                ))
+
         # col2.button('Buy', key=f'String{row[0]}')
-    # st.dataframe(trains)
 
-    # draw Map
-    From_ch = From[From.find('(') + 1: -1]
-    To_ch = To[To.find('(') + 1: -1]
-    print(From_ch)
-    print(To_ch)
-    gps = Nominatim(user_agent='http')
-    loc_from = gps.geocode(From_ch)
-    loc_to = gps.geocode(To_ch)
-    pts = [[loc_from.latitude, loc_from.longitude, loc_to.latitude, loc_to.longitude]]
-    dots = [[loc_from.latitude, loc_from.longitude], [loc_to.latitude, loc_to.longitude]]
-
-    line = pd.DataFrame(
-        np.asarray(pts),
-        columns=['from_lat', 'from_lon', 'to_lat', 'to_lon'])
-
-    df = pd.DataFrame(
-        np.asarray(dots),
-        columns=['lat', 'lon'])
-
-    with st.expander("Show the trip"):
-        st.pydeck_chart(pdk.Deck(
-            map_style='mapbox://styles/mapbox/navigation-night-v1',
-            # map_style='https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-            initial_view_state=pdk.ViewState(
-                latitude=31,
-                longitude=115,
-                zoom=2.5,
-                pitch=0,
-            ),
-            layers=[
-                pdk.Layer(
-                    'ScatterplotLayer',
-                    data=df,
-                    get_position='[lon, lat]',
-                    get_fill_color='[200, 30, 0, 160]',
-                    get_radius=40000,
-                ),
-                pdk.Layer(
-                    'LineLayer',
-                    data=line,
-                    get_line_color='[200, 30, 0, 160]',
-                    get_sourcePosition='[from_lon, from_lat]',
-                    get_targetPosition='[to_lon, to_lat]',
-                    get_color='[200, 30, 0, 160]',
-                    get_width=5,
-                ),
-            ],
-        ))
+    # # draw Map
+    # From_ch = From[From.find('(') + 1: -1]
+    # To_ch = To[To.find('(') + 1: -1]
+    # print(From_ch)
+    # print(To_ch)
+    # gps = Nominatim(user_agent='http')
+    # loc_from = gps.geocode(From_ch)
+    # loc_to = gps.geocode(To_ch)
+    # pts = [[loc_from.latitude, loc_from.longitude, loc_to.latitude, loc_to.longitude]]
+    # dots = [[loc_from.latitude, loc_from.longitude], [loc_to.latitude, loc_to.longitude]]
+    #
+    # line = pd.DataFrame(
+    #     np.asarray(pts),
+    #     columns=['from_lat', 'from_lon', 'to_lat', 'to_lon'])
+    #
+    # df = pd.DataFrame(
+    #     np.asarray(dots),
+    #     columns=['lat', 'lon'])
+    #
+    # with st.expander("Show the trip"):
+    #     st.pydeck_chart(pdk.Deck(
+    #         map_style='mapbox://styles/mapbox/navigation-night-v1',
+    #         # map_style='https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+    #         initial_view_state=pdk.ViewState(
+    #             latitude=31,
+    #             longitude=115,
+    #             zoom=2.5,
+    #             pitch=0,
+    #         ),
+    #         layers=[
+    #             pdk.Layer(
+    #                 'ScatterplotLayer',
+    #                 data=df,
+    #                 get_position='[lon, lat]',
+    #                 get_fill_color='[200, 30, 0, 160]',
+    #                 get_radius=40000,
+    #             ),
+    #             pdk.Layer(
+    #                 'LineLayer',
+    #                 data=line,
+    #                 get_line_color='[200, 30, 0, 160]',
+    #                 get_sourcePosition='[from_lon, from_lat]',
+    #                 get_targetPosition='[to_lon, to_lat]',
+    #                 get_color='[200, 30, 0, 160]',
+    #                 get_width=5,
+    #             ),
+    #         ],
+    #     ))
