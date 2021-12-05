@@ -80,7 +80,7 @@ train_no_includetransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, 
 
 #judge where the train is High Speed or Regular type
 #1st: no transfer normal train
-train_no = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arrive_time-tp1.start_time as travel \
+train_no_normal_withoutTransfer = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arrive_time-tp1.start_time as travel \
         from(Select distinct r1.train_no, t.code \
              from remainingseats r1, remainingseats r2, train t \
              where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
@@ -93,7 +93,7 @@ train_no = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arr
         and tp2.station_name='{To}'"
 
 #2nd: no trasger high-speed train
-train_no = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arrive_time-tp1.start_time as travel \
+train_no_hihg_speed_withoutTransfer = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arrive_time-tp1.start_time as travel \
         from(Select distinct r1.train_no, t.code \
              from remainingseats r1, remainingseats r2, train t \
              where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
@@ -106,7 +106,7 @@ train_no = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arr
         and tp2.station_name='{To}'"
 
 #3rd: transfer normal train
-train_no_includetransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name\
+rain_no_normal_withTransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name\
         from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2\
              from remainingseats r1, remainingseats r2,remainingseats r3, remainingseats r4, train t1 \
              where r1.train_no = r2.train_no and r3.train_no = and r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
@@ -119,7 +119,7 @@ train_no_includetransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, 
         and tp4.station_name='{To}'"
 
 #4th: transfer high-speed train
-train_no_includetransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name\
+train_no_hihg_speed_withTransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name\
         from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2\
              from remainingseats r1, remainingseats r2,remainingseats r3, remainingseats r4, train t1 \
              where r1.train_no = r2.train_no and r3.train_no = and r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
