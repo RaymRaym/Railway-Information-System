@@ -68,7 +68,7 @@ train_no = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arr
 
 #include the transfer sql, will have the first trian and second train no, code, and start/arrive time. with the whole travel time and transfer station name
 train_no_includetransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
-    from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2 \
+    from(Select distinct r1.train_no as train_no1, r3.train_no as train_no2, t1.code as code1, t3.code as code2 \
         from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
         where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
         and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
@@ -107,7 +107,7 @@ train_no_hihg_speed_withoutTransfer = f"select x.train_no, x.code, tp1.start_tim
 #3rd: transfer normal train
 
 rain_no_normal_withTransfer  = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
-    from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2 \
+    from(Select distinct r1.train_no as train_no1, r3.train_no as train_no2, t1.code as code1, t3.code as code2 \
         from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
         where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
         and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
@@ -119,7 +119,7 @@ rain_no_normal_withTransfer  = f"select x.train_no1, x.train_no2, x.code1, x.cod
 
 #4th: transfer high-speed train
 train_no_hihg_speed_withTransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
-    from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2 \
+    from(Select distinct r1.train_no as train_no1, r3.train_no as train_no2, t1.code as code1, t3.code as code2 \
         from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
         where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
         and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
