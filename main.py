@@ -111,6 +111,8 @@ if search:
 
     for item in trains:
 
+        gps = Nominatim(user_agent='http')
+
         train = item[0]
         train_cod = item[1]
         depart_time = item[2]
@@ -131,41 +133,46 @@ if search:
         with st.expander("detail"):
             try:
                 stations = query(stations).values.tolist()  # dataframe
+                print(stations)
             except:
                 st.write("Sorry! Something went wrong with your query, please try again.")
             col1, col2 = st.columns([3, 1])
+            path = [{"path":[]}]
             for object in stations:
                 station_no = object[1]
                 station_name = object[0]
+                station_name_ch = station_name[station_name.find('(') + 1: -1]
+                station_loc = gps.geocode(station_name_ch)
+                path[0].get("path").append([station_loc.longitude, station_loc.latitude])
                 arrive_time = object[2]
                 col2.caption(f"{station_no} {station_name} **_{arrive_time.strftime('%H:%M')}_**")
+            # print(path)
+            # From_ch = From[From.find('(') + 1: -1]
+            # To_ch = To[To.find('(') + 1: -1]
+            # print(From_ch)
+            # print(To_ch)
 
-            From_ch = From[From.find('(') + 1: -1]
-            To_ch = To[To.find('(') + 1: -1]
-            print(From_ch)
-            print(To_ch)
-            gps = Nominatim(user_agent='http')
-            loc_from = gps.geocode(From_ch)
-            loc_to = gps.geocode(To_ch)
-            pts = [[loc_from.latitude, loc_from.longitude, loc_to.latitude, loc_to.longitude]]
-            dots = [[loc_from.latitude, loc_from.longitude], [loc_to.latitude, loc_to.longitude]]
+            # loc_from = gps.geocode(From_ch)
+            # loc_to = gps.geocode(To_ch)
+            # pts = [[loc_from.latitude, loc_from.longitude, loc_to.latitude, loc_to.longitude]]
+            # dots = [[loc_from.latitude, loc_from.longitude], [loc_to.latitude, loc_to.longitude]]
 
-            line = pd.DataFrame(
-                np.asarray(pts),
-                columns=['from_lat', 'from_lon', 'to_lat', 'to_lon'])
+            # line = pd.DataFrame(
+            #     np.asarray(pts),
+            #     columns=['from_lat', 'from_lon', 'to_lat', 'to_lon'])
 
             df = pd.DataFrame(
-                np.asarray(dots),
-                columns=['lat', 'lon'])
+                np.asarray(path[0].get("path")),
+                columns=['lon', 'lat'])
 
             col1.pydeck_chart(pdk.Deck(
                 map_style='mapbox://styles/mapbox/navigation-night-v1',
                 # map_style='https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
                 initial_view_state=pdk.ViewState(
-                    latitude=31,
-                    longitude=115,
-                    zoom=2.5,
-                    pitch=0,
+                    latitude=path[0].get("path")[0][1],
+                    longitude=path[0].get("path")[0][0],
+                    zoom=6,
+                    pitch=2,
                 ),
                 layers=[
                     pdk.Layer(
@@ -173,16 +180,13 @@ if search:
                         data=df,
                         get_position='[lon, lat]',
                         get_fill_color='[200, 30, 0, 160]',
-                        get_radius=40000,
+                        get_radius=15000,
                     ),
                     pdk.Layer(
-                        'LineLayer',
-                        data=line,
-                        get_line_color='[200, 30, 0, 160]',
-                        get_sourcePosition='[from_lon, from_lat]',
-                        get_targetPosition='[to_lon, to_lat]',
+                        'PathLayer',
+                        data=path,
                         get_color='[200, 30, 0, 160]',
-                        get_width=5,
+                        width_min_pixels=5,
                     ),
                 ],
             ))
