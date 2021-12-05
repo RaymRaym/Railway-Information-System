@@ -67,16 +67,15 @@ train_no = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arr
         and tp2.station_name='{To}'"
 
 #include the transfer sql, will have the first trian and second train no, code, and start/arrive time. with the whole travel time and transfer station name
-train_no_includetransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name\
-        from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2\
-             from remainingseats r1, remainingseats r2,remainingseats r3, remainingseats r4, train t1 \
-             where r1.train_no = r2.train_no and r3.train_no = and r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
-             and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' and r3.train_no = t3.train_no\
-             and r2.station_name = r3.station_name and r2.station_no >= r1.station_no and r4.station_no >= r3.station_no and r1.train_no = t1.train_no) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
-        where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no\
-        and tp1.train_no1 = tp2.train_no and tp3.train_no = tp4.train_no\
-        and tp1.station_name='{From}'\
-        and tp4.station_name='{To}'"
+train_no_includetransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
+    from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2 \
+        from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
+        where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
+        and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
+        and r3.train_no = t3.train_no and r2.station_name = r3.station_name and r2.station_no >= r1.station_no and r4.station_no >= r3.station_no \
+        and r1.train_no = t1.train_no) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
+    where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no and tp1.train_no1 = tp2.train_no \
+    and tp3.train_no = tp4.train_no and tp1.station_name='{From}' and tp4.station_name='{To}'"
 
 #judge where the train is High Speed or Regular type
 #1st: no transfer normal train
@@ -106,30 +105,29 @@ train_no_hihg_speed_withoutTransfer = f"select x.train_no, x.code, tp1.start_tim
         and tp2.station_name='{To}'"
 
 #3rd: transfer normal train
-rain_no_normal_withTransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name\
-        from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2\
-             from remainingseats r1, remainingseats r2,remainingseats r3, remainingseats r4, train t1 \
-             where r1.train_no = r2.train_no and r3.train_no = and r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
-             and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' and r3.train_no = t3.train_no\
-             and r2.station_name = r3.station_name and r2.station_no >= r1.station_no and r4.station_no >= r3.station_no and r1.train_no = t1.train_no\
-             and (SUBSTR(r1.code,1,1) != 'D' or SUBSTR(r1.code,1,1) != 'G') and (SUBSTR(r3.code,1,1) != 'D' or SUBSTR(r3.code,1,1) != 'G')) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
-        where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no\
-        and tp1.train_no1 = tp2.train_no and tp3.train_no = tp4.train_no\
-        and tp1.station_name='{From}'\
-        and tp4.station_name='{To}'"
+
+rain_no_normal_withTransfer  = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
+    from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2 \
+        from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
+        where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
+        and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
+        and r3.train_no = t3.train_no and r2.station_name = r3.station_name and r2.station_no >= r1.station_no and r4.station_no >= r3.station_no \
+        and r1.train_no = t1.train_no and and (SUBSTR(r1.code,1,1) != 'D' or SUBSTR(r1.code,1,1) != 'G') and (SUBSTR(r3.code,1,1) != 'D' or SUBSTR(r3.code,1,1) != 'G') \
+        ) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
+    where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no and tp1.train_no1 = tp2.train_no \
+    and tp3.train_no = tp4.train_no and tp1.station_name='{From}' and tp4.station_name='{To}'"
 
 #4th: transfer high-speed train
-train_no_hihg_speed_withTransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name\
-        from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2\
-             from remainingseats r1, remainingseats r2,remainingseats r3, remainingseats r4, train t1 \
-             where r1.train_no = r2.train_no and r3.train_no = and r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
-             and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' and r3.train_no = t3.train_no\
-             and r2.station_name = r3.station_name and r2.station_no >= r1.station_no and r4.station_no >= r3.station_no and r1.train_no = t1.train_no\
-             and (SUBSTR(r1.code,1,1) = 'D' or SUBSTR(r1.code,1,1) = 'G') and (SUBSTR(r3.code,1,1) = 'D' or SUBSTR(r3.code,1,1) = 'G')) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
-        where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no\
-        and tp1.train_no1 = tp2.train_no and tp3.train_no = tp4.train_no\
-        and tp1.station_name='{From}'\
-        and tp4.station_name='{To}'"
+train_no_hihg_speed_withTransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
+    from(Select distinct r1.train_no as train_no1, r3.train_no2 as train_no2, t1.code as code1, t3.code as code2 \
+        from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
+        where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
+        and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
+        and r3.train_no = t3.train_no and r2.station_name = r3.station_name and r2.station_no >= r1.station_no and r4.station_no >= r3.station_no \
+        and r1.train_no = t1.train_no and and (SUBSTR(r1.code,1,1) = 'D' or SUBSTR(r1.code,1,1) = 'G') and (SUBSTR(r3.code,1,1) != 'D' or SUBSTR(r3.code,1,1) != 'G') \
+        ) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
+    where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no and tp1.train_no1 = tp2.train_no \
+    and tp3.train_no = tp4.train_no and tp1.station_name='{From}' and tp4.station_name='{To}'‘"
 
 
 for train in train_no:
@@ -163,6 +161,7 @@ if search:
             trains = query(f"{train_no} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
 
         if order == "Arrival Time":
+            print(train_no)
             trains = query(f"{train_no} order by tp2.arrive_time").values.tolist()
 
         # if order == "Travel Time":
