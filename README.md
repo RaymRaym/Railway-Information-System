@@ -21,3 +21,4 @@ Problems so far:
 
 5.  地图显示路径，暂不急
 6.  travel time 显示问题
+7. 显示票价和对应的票剩余的张数 sql是140行
