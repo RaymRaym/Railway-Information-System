@@ -66,6 +66,76 @@ train_no = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arr
         and tp1.station_name='{From}'\
         and tp2.station_name='{To}'"
 
+#include the transfer sql, will have the first trian and second train no, code, and start/arrive time. with the whole travel time and transfer station name
+train_no_includetransfer = f"Select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
+    from(Select distinct r1.train_no as train_no1, r3.train_no as train_no2, t1.code as code1, t3.code as code2 \
+        from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
+        where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
+        and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
+        and r3.train_no = t3.train_no and r2.station_name = r3.station_name and r2.station_no > r1.station_no and r4.station_no > r3.station_no \
+        and r1.train_no = t1.train_no) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
+    where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no \
+    and tp1.train_no = tp2.train_no and tp3.train_no = tp4.train_no \
+    and tp1.station_name = '{From}'\
+    and tp2.station_name = tp3.station_name \
+    and tp4.station_name = '{To}'"
+
+#judge where the train is High Speed or Regular type
+#1st: no transfer normal train
+train_no_normal_withoutTransfer = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arrive_time-tp1.start_time as travel \
+        from(Select distinct r1.train_no, t.code \
+             from remainingseats r1, remainingseats r2, train t \
+             where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
+             and r1.station_name = '{From}' and r2.station_name = '{To}'\
+            and r2.station_no >= r1.station_no and r1.train_no = t.train_no\
+            and t.code not in (select t.code from train t where SUBSTRING(t.code from 1 for 1) = 'D' or SUBSTRING(t.code from 1 for 1) = 'G')) x, time_price tp1, time_price tp2 \
+        where x.train_no = tp1.train_no\
+        and tp1.train_no = tp2.train_no\
+        and tp1.station_name='{From}'\
+        and tp2.station_name='{To}'"
+
+#2nd: no trasger high-speed train
+train_no_high_speed_withoutTransfer = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arrive_time-tp1.start_time as travel \
+        from(Select distinct r1.train_no, t.code \
+             from remainingseats r1, remainingseats r2, train t \
+             where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
+             and r1.station_name = '{From}' and r2.station_name = '{To}'\
+            and r2.station_no >= r1.station_no and r1.train_no = t.train_no\
+            and t.code in (select t.code from train t where SUBSTRING(t.code from 1 for 1) = 'D' or SUBSTRING(t.code from 1 for 1) = 'G')) x, time_price tp1, time_price tp2 \
+        where x.train_no = tp1.train_no \
+        and tp1.train_no = tp2.train_no \
+        and tp1.station_name = '{From}' \
+        and tp2.station_name = '{To}' "
+
+#3rd: transfer normal train
+
+train_no_normal_withTransfer  = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
+    from(Select distinct r1.train_no as train_no1, r3.train_no as train_no2, t1.code as code1, t3.code as code2 \
+        from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
+        where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
+        and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
+        and r3.train_no = t3.train_no and r2.station_name = r3.station_name and r2.station_no >= r1.station_no and r4.station_no >= r3.station_no \
+        and r1.train_no = t1.train_no and SUBSTRING(t1.code from 1 for 1) != 'D' and SUBSTRING(t1.code from 1 for 1) != 'G' and SUBSTRING(t3.code from 1 for 1) != 'D' and SUBSTRING(t3.code from 1 for 1) != 'G' \
+        ) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
+    where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no and tp1.train_no = tp2.train_no \
+    and tp2.station_name = tp3.station_name \
+    and tp3.train_no = tp4.train_no and tp1.station_name = '{From}' and tp4.station_name = '{To}' "
+
+#4th: transfer high-speed train
+train_no_high_speed_withTransfer = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
+    from(Select distinct r1.train_no as train_no1, r3.train_no as train_no2, t1.code as code1, t3.code as code2 \
+        from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
+        where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
+        and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
+        and r3.train_no = t3.train_no and r2.station_name = r3.station_name and r2.station_no >= r1.station_no and r4.station_no >= r3.station_no \
+        and r1.train_no = t1.train_no and t1.code in (select t.code from train t where SUBSTRING(t.code from 1 for 1) = 'D' or SUBSTRING(t.code from 1 for 1) = 'G')\
+        and t3.code in (select t.code from train t where SUBSTRING(t.code from 1 for 1) = 'D' or SUBSTRING(t.code from 1 for 1) = 'G') \
+        ) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
+    where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no and tp1.train_no = tp2.train_no \
+    and tp2.station_name = tp3.station_name \
+    and tp3.train_no = tp4.train_no and tp1.station_name = '{From}' and tp4.station_name = '{To}' "
+
+
 for train in train_no:
     stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
             and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
@@ -91,18 +161,80 @@ if search:
     # refresh
     placeholder.empty()
     print(order)
+    print(options)
+    print(transfer)
     try:
         if order == "Departure Time":
-            print(train_no)
-            trains = query(f"{train_no} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
+            if options[0] == "High Speed":
+                if transfer == False:
+                    print(train_no_high_speed_withoutTransfer)
+                    trains = query(f"{train_no_high_speed_withoutTransfer} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
+                if transfer == True:
+                    print(train_no_high_speed_withTransfer)
+                    trains = query(f"{train_no_high_speed_withTransfer} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
+                
+            if options[0] == "Regular":
+                if transfer == False:
+                    print(train_no_normal_withoutTransfer)
+                    trains = query(f"{train_no_normal_withoutTransfer} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
+                if transfer == True:
+                    print(train_no_normal_withTransfer)
+                    trains = query(f"{train_no_normal_withTransfer} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
 
+            if options[0] == "High Speed" and options[1] == "Regular":
+                if transfer == False:
+                    print(train_no)
+                    trains = query(f"{train_no} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
+                if transfer == True:
+                    print(train_no_includetransfer)
+                    trains = query(f"{train_no_includetransfer} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
+                    
+            if options[0] == "Regular" and options[1] == "High Speed":
+                if transfer == False:
+                    print(train_no)
+                    trains = query(f"{train_no} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
+                if transfer == True:
+                    print(train_no_includetransfer)
+                    trains = query(f"{train_no_includetransfer} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
+                
         if order == "Arrival Time":
-            trains = query(f"{train_no} order by tp2.arrive_time").values.tolist()
+            if options[0] == "High Speed":
+                if transfer == False:
+                    print(train_no_high_speed_withoutTransfer)
+                    trains = query(f"{train_no_high_speed_withoutTransfer} order by tp2.arrive_time").values.tolist()  # pd dataframe -> py list
+                if transfer == True:
+                    print(train_no_high_speed_withTransfer)
+                    trains = query(f"{train_no_high_speed_withTransfer} order by tp4.arrive_time").values.tolist()  # pd dataframe -> py list
+                
+            if options[0] == "Regular":
+                if transfer == False:
+                    print(train_no_normal_withoutTransfer)
+                    trains = query(f"{train_no_normal_withoutTransfer} order by tp2.arrive_time").values.tolist()  # pd dataframe -> py list
+                if transfer == True:
+                    print(train_no_normal_withTransfer)
+                    trains = query(f"{train_no_normal_withTransfer} order by tp4.arrive_time").values.tolist()  # pd dataframe -> py list
+
+            if options[0] == "High Speed" and options[1] == "Regular":
+                if transfer == False:
+                    print(train_no)
+                    trains = query(f"{train_no} order by tp2.arrive_time").values.tolist()  # pd dataframe -> py list
+                if transfer == True:
+                    print(train_no_includetransfer)
+                    trains = query(f"{train_no_includetransfer} order by tp4.arrive_time").values.tolist()  # pd dataframe -> py list
+
+            if options[0] == "Regular" and options[1] == "High Speed":
+                if transfer == False:
+                    print(train_no)
+                    trains = query(f"{train_no} order by tp2.arrive_time").values.tolist()  # pd dataframe -> py list
+                if transfer == True:
+                    print(train_no_includetransfer)
+                    trains = query(f"{train_no_includetransfer} order by tp4.arrive_time").values.tolist()  # pd dataframe -> py list
 
         # if order == "Travel Time":
         #     trains = query(f"{train_no} order by travel").values.tolist()
     except:
         st.write("Sorry! Something went wrong with your query, please try again.")
+        print("Sorry! Something went wrong with your query, please try again.")
 
     st.header(f"**_{From}_** -> **_{To}_** ")
     st.header(f"**Depart on _{date.strftime('%Y-%m-%d')}_**")
@@ -136,6 +268,7 @@ if search:
                 print(stations)
             except:
                 st.write("Sorry! Something went wrong with your query, please try again.")
+                print("Sorry! Something went wrong with your query, please try again.")
             col1, col2 = st.columns([3, 1])
             path = [{"path":[]}]
             for object in stations:
