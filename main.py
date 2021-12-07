@@ -142,6 +142,7 @@ for train in train_no:
             and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
             and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
 
+    #这里可以打印出来每一个train——no对应的某一天这个车次我们查询的两地之间，剩余的可买车票数以及对应车票的价格
     seats_remains_price = f"select tp.train_no, r.date, min(r.a9) as business_class_seat,\
             sum(tp.a9) as price_business_class_seat, min(r.a6) as premium_soft_sleeper, sum(tp.a6) as price_premium_soft_sleeper,\
             min(r.a4) as soft_sleeper, sum(tp.a4) as price_soft_sleeper, min(r.a3) as hard_sleeper, sum(tp.a3) as price_hard_sleeper,\
