@@ -109,7 +109,6 @@ train_no_high_speed_withoutTransfer = f"select x.train_no, x.code, tp1.start_tim
         and tp2.station_name = '{To}' "
 
 #3rd: transfer normal train
-
 train_no_normal_withTransfer  = f"select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
     from(Select distinct r1.train_no as train_no1, r3.train_no as train_no2, t1.code as code1, t3.code as code2 \
         from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
@@ -155,6 +154,34 @@ for train in train_no:
             and tp.station_no <= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{To}' and tp.station_no = r.station_no)\
             and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
             group by tp.train_no, r.date"
+
+#！！！！！用下面两个放到具体位置就可以！！！！
+#普通对应票
+for train in train_no_high_speed_withoutTransfer:
+    seats_remains_price = f"select tp.train_no, r.date,\
+            min(r.a6) as premium_soft_sleeper, sum(tp.a6) as price_premium_soft_sleeper,\
+            min(r.a4) as soft_sleeper, sum(tp.a4) as price_soft_sleeper, min(r.a3) as hard_sleeper, sum(tp.a3) as price_hard_sleeper,\
+            min(r.a1) as hard_seat, sum(tp.a1) as price_hard_seat, min(r.a2) as soft_seat, sum(tp.a2) as price_soft_seat,\
+            min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket,\
+            from remainingseats r, time_price tp where tp.train_no = '{train[0]}'\
+            and tp.station_no >= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{From}')\
+            and tp.station_no <= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{To}' and tp.station_no = r.station_no)\
+            and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
+            group by tp.train_no, r.date"
+#高铁对应票
+for train in 
+    seats_remains_price = f"select tp.train_no, r.date,\
+            min(r.a9) as business_class_seat, sum(tp.a9) as price_business_class_seat,\
+            min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket, min(r.p) as premium_class_seat,\
+            sum(tp.p) as price_premium_class_seat, min(r.m) as first_class_seat, sum(tp.m) as price_first_class_seat,\
+            min(r.o) as second_class_seat, sum(tp.o) as price_second_class_seat\
+            from remainingseats r, time_price tp where tp.train_no = '{train[0]}'\
+            and tp.station_no >= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{From}')\
+            and tp.station_no <= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{To}' and tp.station_no = r.station_no)\
+            and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
+            group by tp.train_no, r.date"
+                
+
 # ticket = "SELECT min(A9), min(P),min(M),min(O),min(A6),min(A4),min(A3),min(A2),min(A1),min(WZ),min(MIN) FROM
 # remainingseats\r\n" + "where \r\n" + "train_no=?\r\n" + "and date=" + date + "\r\n" + "and station_no >= \r\n" + "(
 # select station_no from time_price where train_no=? and station_name=?)\r\n" + "and station_no < \r\n" + "(select
