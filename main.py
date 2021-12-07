@@ -6,6 +6,7 @@ import pydeck as pdk
 import numpy as np
 from geopy.geocoders import Nominatim
 from PIL import Image
+import matplotlib.pyplot as plt
 import json
 
 
@@ -155,6 +156,8 @@ for train in train_no:
 # select station_no from time_price where train_no=? and station_name=?)\r\n" + "and station_no < \r\n" + "(select
 # station_no from time_price where train_no=? and  station_name=?)"
 search = st.sidebar.button('Search')
+Analytic = st.sidebar.button('Analytic')
+
 
 # search button listener
 if search:
@@ -188,7 +191,7 @@ if search:
                 if transfer == True:
                     print(train_no_includetransfer)
                     trains = query(f"{train_no_includetransfer} order by tp1.start_time").values.tolist()  # pd dataframe -> py list
-                    
+
             if options[0] == "Regular" and options[1] == "High Speed":
                 if transfer == False:
                     print(train_no)
@@ -374,3 +377,37 @@ if search:
     #             ),
     #         ],
     #     ))
+if Analytic:
+    #refresh
+    placeholder.empty()
+    rank_for_train = f"Select station_name, count(*) from time_price group by station_name order by count(*) desc limit 10"
+    try:
+        Ranks = query(f"{rank_for_train}").values.tolist()
+    except:
+        st.write("Sorry! Something went wrong with your query, please try again.")
+        print("Sorry! Something went wrong with your query, please try again.")
+    
+    print(Ranks)
+    arr1 = []
+    arr2 = []
+    for item in Ranks:
+        print(item[0])
+        arr1.append(item[0])
+        arr2.append(item[1])
+    
+
+    st.caption(f"Top 10 busiest station in the country")
+
+    df1 = pd.DataFrame({
+    'first column': arr1,
+    'second column': arr2,
+    })
+
+    st.write(df1)
+
+    names = arr1
+    nums = arr2
+    plt.bar(names, nums)
+    plt.show()
+    st.pyplot(plt)
+
