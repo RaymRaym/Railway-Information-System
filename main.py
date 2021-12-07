@@ -142,15 +142,18 @@ for train in train_no:
             and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
             and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
 
-    seats_remains_price = f"select r.station_no, r.date, min(r.a9) as seat_a9,\
-            sum(tp.a9) as price_a9, min(r.a6) as seat_a6, sum(tp.a6) as price_a6, min(r.a4) as seat_a4, sum(tp.a4) as price_a4,\
-            min(r.a3) as seat_a3, sum(tp.a3) as price_a3, min(r.a1) as seat_a1, sum(tp.a1) as price_a1, min(r.wz) as seat_wz, sum(tp.wz) as price_wz,\
-            min(r.p) as seat_p, sum(tp.p) as price_p, min(r.m) as seat_m, sum(tp.m) as price_m, min(r.o) as seat_o, sum(tp.o) as price_o\
-            from remainingseats r, time_price tp where tp.train_no = '{train}'\
-            and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
-            and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}' and tp.station_no = r.station_no\
+    seats_remains_price = f"select tp.train_no, r.date, min(r.a9) as business_class_seat,\
+            sum(tp.a9) as price_business_class_seat, min(r.a6) as premium_soft_sleeper, sum(tp.a6) as price_premium_soft_sleeper,\
+            min(r.a4) as soft_sleeper, sum(tp.a4) as price_soft_sleeper, min(r.a3) as hard_sleeper, sum(tp.a3) as price_hard_sleeper,\
+            min(r.a1) as hard_seat, sum(tp.a1) as price_hard_seat, min(r.a2) as soft_seat, sum(tp.a2) as price_soft_seat,\
+            min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket, min(r.p) as premium_class_seat,\
+            sum(tp.p) as price_premium_class_seat, min(r.m) as first_class_seat, sum(tp.m) as price_first_class_seat,\
+            min(r.o) as second_class_seat, sum(tp.o) as price_second_class_seat\
+            from remainingseats r, time_price tp where tp.train_no = '{train[0]}'\
+            and tp.station_no >= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{From}')\
+            and tp.station_no <= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{To}' and tp.station_no = r.station_no)\
             and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
-            group by r.station_no, r.date"
+            group by tp.train_no, r.date"
 # ticket = "SELECT min(A9), min(P),min(M),min(O),min(A6),min(A4),min(A3),min(A2),min(A1),min(WZ),min(MIN) FROM
 # remainingseats\r\n" + "where \r\n" + "train_no=?\r\n" + "and date=" + date + "\r\n" + "and station_no >= \r\n" + "(
 # select station_no from time_price where train_no=? and station_name=?)\r\n" + "and station_no < \r\n" + "(select
