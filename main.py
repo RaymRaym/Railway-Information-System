@@ -225,7 +225,10 @@ where a.transfer_station = b.transfer_station and a.arrive_time<b.start_time and
 # select station_no from time_price where train_no=? and station_name=?)\r\n" + "and station_no < \r\n" + "(select
 # station_no from time_price where train_no=? and  station_name=?)"
 search = st.sidebar.button('Search')
+date_to_check = st.sidebar.date_input("Date_to_check", datetime.date.today())
+station = st.sidebar.selectbox("station", stations)
 Analytic = st.sidebar.button('Analytic')
+Schedule = st.sidebar.button('Schedule')
 
 print(search)
 # search button listener
@@ -435,9 +438,7 @@ if Analytic:
         arr1.append(item[0])
         arr2.append(item[1])
 
-
-    st.caption(f"Top 10 busiest station in the country")
-
+    st.header(f"Top 10 busiest station in the country")
     df1 = pd.DataFrame({
     'first column': arr1,
     'second column': arr2,
@@ -445,9 +446,53 @@ if Analytic:
 
     st.write(df1)
 
-    names = arr1
-    nums = arr2
-    plt.bar(names, nums)
-    plt.show()
-    st.pyplot(plt)
+
+    all_train_times = f"Select station_name, count(*) from time_price group by station_name"
+    try:
+        numbers = query(f"{all_train_times}").values.tolist()
+    except:
+        st.write("Sorry! Something went wrong with your query, please try again.")
+        print("Sorry! Something went wrong with your query, please try again.")
+
+    arr = []
+    for item in numbers:
+        arr.append(item[1])
+
+    st.header(f"the communities in every cities distribution")
+
+    num_arr = np.array(arr)
+    print(num_arr)
+    chart_data = pd.DataFrame(num_arr,columns=["numbers of the trains"])
+
+    st.bar_chart(chart_data)
+    #names = arr1
+    #nums = arr2
+    #plt.bar(names, nums)
+    #plt.show()
+    #st.pyplot(plt)
+if Schedule:
+    placeholder.empty()
+    print(date_to_check)
+    print(station)
+    try:
+        find = f"select ttp.train_no, t.code, ttp.arrive_time, ttp.start_time\
+                      from train_time_price ttp, schedule s, train t where ttp.train_no = s.train_no\
+                      and ttp.station_name = '{station}' and CAST(s.date AS DATE) = '{date_to_check.strftime('%Y-%m-%d')}'\
+                      and ttp.train_no = t.train_no"
+        print(find)
+        all_trains = query(f"{find}")
+    except:
+        st.write("Sorry! Something went wrong with your query, please try again.")
+        print("Sorry! Something went wrong with your query, please try again.")
+
+    print(all_trains)
+
+    st.header(f"{station}")
+    st.subheader(f"Schdule date: **_{date_to_check.strftime('%Y-%m-%d')}_**")     
+
+
+    st.write(all_trains)
+        
+
+
 
