@@ -3,10 +3,11 @@ A web data app [ PostgreSQL + Streamlit ]
 
 TO-DO:
 1. 消息框，<数据异常>， <修改失败> etc.弹消息框
-2. 只看高铁，动车
+2. ~~只看高铁，动车~~
 3. ~~按照时间降序~~
 4. ~~计算travel time~~
 5. 好看的chart
+6. ~~换乘问题~~
 
 
 Problems so far:
@@ -20,3 +21,4 @@ Problems so far:
 
 5.  地图显示路径，暂不急
 6.  travel time 显示问题
+7. 显示票价和对应的票剩余的张数 sql是140行
