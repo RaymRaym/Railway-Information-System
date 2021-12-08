@@ -187,38 +187,11 @@ where a.transfer_station = b.transfer_station and a.arrive_time<b.start_time and
 #             min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket, min(r.p) as premium_class_seat,\
 #             sum(tp.p) as price_premium_class_seat, min(r.m) as first_class_seat, sum(tp.m) as price_first_class_seat,\
 #             min(r.o) as second_class_seat, sum(tp.o) as price_second_class_seat\
-#             from remainingseats r, time_price tp where tp.train_no = '{train[0]}'\
-#             and tp.station_no >= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{From}')\
-#             and tp.station_no <= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{To}' and tp.station_no = r.station_no)\
+#             from remainingseats r, time_price tp where tp.train_no = '{train}'\
+#             and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
+#             and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}' and tp.station_no = r.station_no)\
 #             and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
 #             group by tp.train_no, r.date"
-#
-# #！！！！！用下面两个放到具体位置就可以！！！！
-# #普通对应票
-# for train in train_no_high_speed_withoutTransfer:
-#     seats_remains_price = f"select tp.train_no, r.date,\
-#             min(r.a6) as premium_soft_sleeper, sum(tp.a6) as price_premium_soft_sleeper,\
-#             min(r.a4) as soft_sleeper, sum(tp.a4) as price_soft_sleeper, min(r.a3) as hard_sleeper, sum(tp.a3) as price_hard_sleeper,\
-#             min(r.a1) as hard_seat, sum(tp.a1) as price_hard_seat, min(r.a2) as soft_seat, sum(tp.a2) as price_soft_seat,\
-#             min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket,\
-#             from remainingseats r, time_price tp where tp.train_no = '{train[0]}'\
-#             and tp.station_no >= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{From}')\
-#             and tp.station_no <= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{To}' and tp.station_no = r.station_no)\
-#             and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
-#             group by tp.train_no, r.date"
-# #高铁对应票
-# #for train in
-#     seats_remains_price = f"select tp.train_no, r.date,\
-#             min(r.a9) as business_class_seat, sum(tp.a9) as price_business_class_seat,\
-#             min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket, min(r.p) as premium_class_seat,\
-#             sum(tp.p) as price_premium_class_seat, min(r.m) as first_class_seat, sum(tp.m) as price_first_class_seat,\
-#             min(r.o) as second_class_seat, sum(tp.o) as price_second_class_seat\
-#             from remainingseats r, time_price tp where tp.train_no = '{train[0]}'\
-#             and tp.station_no >= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{From}')\
-#             and tp.station_no <= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{To}' and tp.station_no = r.station_no)\
-#             and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
-#             group by tp.train_no, r.date"
-#
 
 # ticket = "SELECT min(A9), min(P),min(M),min(O),min(A6),min(A4),min(A3),min(A2),min(A1),min(WZ),min(MIN) FROM
 # remainingseats\r\n" + "where \r\n" + "train_no=?\r\n" + "and date=" + date + "\r\n" + "and station_no >= \r\n" + "(
@@ -272,6 +245,8 @@ if search:
 
         train = item[0]
         train_cod = item[1]
+        type_train = train_cod[0:1]
+        print(type_train)
         depart_time = item[2]
         arr_time = item[3]
         tra_time = str(item[4])
@@ -284,30 +259,121 @@ if search:
                         and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
                         and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
 
-        seats_remains_price = f"select tp.train_no, r.date,\
-                    min(r.a9) as business_class_seat, sum(tp.a9) as price_business_class_seat,\
-                    min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket, min(r.p) as premium_class_seat,\
-                    sum(tp.p) as price_premium_class_seat, min(r.m) as first_class_seat, sum(tp.m) as price_first_class_seat,\
-                    min(r.o) as second_class_seat, sum(tp.o) as price_second_class_seat\
-                    from remainingseats r, time_price tp where tp.train_no = '{train}'\
-                    and tp.station_no >= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{From}')\
-                    and tp.station_no <= (select station_no from time_price where train_no = '{train[0]}' and station_name = '{To}' and tp.station_no = r.station_no)\
-                    and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
-                    group by tp.train_no, r.date"
-
 
         st.subheader(f"{train_cod}")
-        st.caption(
-            f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_** Travel Time:**_{str(tra_time)}_**")
-        seats = query(seats_remains_price)
-        st.write(seats)
+        st.caption(f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_** Travel Time:**_{str(tra_time)}_**")
+
+        if type_train == 'G' or type_train == 'D':
+
+            seats_remains_price_highspeed = f"select tp.train_no, r.date,\
+            min(r.a9) as business_class_seat, sum(tp.a9) as price_business_class_seat,\
+            min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket, min(r.p) as premium_class_seat,\
+            sum(tp.p) as price_premium_class_seat, min(r.m) as first_class_seat, sum(tp.m) as price_first_class_seat,\
+            min(r.o) as second_class_seat, sum(tp.o) as price_second_class_seat\
+            from remainingseats r, time_price tp where tp.train_no = '{train}'\
+            and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
+            and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}' and tp.station_no = r.station_no)\
+            and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
+            group by tp.train_no, r.date"
+
+            try:
+                seats_price = query(seats_remains_price_highspeed).values.tolist()  # dataframe
+            except:
+                st.write("Sorry! Something went wrong with your seats_remains_price_highspeed query, please try again.")
+                print("Sorry! Something went wrong with your seats_remains_price_highspeed query, please try again.")
+                    
+            print(seats_price)
+            seats_price = seats_price[0]
+            premium_class_seat = seats_price[6]
+            price_premium_class_seat = seats_price[7]
+            business_class_seat = seats_price[2]
+            price_business_class_seat = seats_price[3]
+            second_class_seat = seats_price[8]
+            price_second_class_seat = seats_price[9]
+            standing_ticket = seats_price[4]
+            price_standing_ticket = seats_price[5]
+
+            if premium_class_seat is not None:
+                st.caption(
+                    f"premium_class_seat: **_{premium_class_seat}_** price_premium_class_seat:**_{price_premium_class_seat}_**")
+            if business_class_seat is not None:
+                st.caption(
+                    f"business_class_seat: **_{business_class_seat}_** price_business_class_seat:**_{price_business_class_seat}_**")
+            if second_class_seat is not None:
+                st.caption(
+                    f"second_class_seat: **_{second_class_seat}_** price_second_class_seat:**_{price_second_class_seat}_**")
+            if standing_ticket is not None:
+                st.caption(
+                    f"standing_ticket: **_{standing_ticket}_** price_standing_ticket:**_{price_standing_ticket}_**")
+
+
+        else:
+            seats_remains_price_normal = f"select tp.train_no, r.date,\
+             min(r.a6) as premium_soft_sleeper, sum(tp.a6) as price_premium_soft_sleeper,\
+             min(r.a4) as soft_sleeper, sum(tp.a4) as price_soft_sleeper, min(r.a3) as hard_sleeper, sum(tp.a3) as price_hard_sleeper,\
+             min(r.a1) as hard_seat, sum(tp.a1) as price_hard_seat, min(r.a2) as soft_seat, sum(tp.a2) as price_soft_seat,\
+             min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket\
+             from remainingseats r, time_price tp where tp.train_no = '{train}'\
+             and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
+             and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}' and tp.station_no = r.station_no)\
+             and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
+             group by tp.train_no, r.date"
+
+            try:
+                seats_price = query(seats_remains_price_normal).values.tolist()  # dataframe
+            except:
+                st.write("Sorry! Something went wrong with your seats_remains_price_normal query, please try again.")
+                print("Sorry! Something went wrong with your seats_remains_price_normal query, please try again.")
+                    
+            print(seats_price)  
+            seats_price = seats_price[0]
+            premium_soft_sleeper = seats_price[2]
+            price_premium_soft_sleeper = seats_price[3]          
+            soft_sleeper = seats_price[4]
+            price_soft_sleeper = seats_price[5]
+            hard_sleeper = seats_price[6]
+            price_hard_sleeper = seats_price[7]
+            hard_seat = seats_price[8]
+            price_hard_seat = seats_price[9]
+            soft_seat = seats_price[10]
+            price_soft_seat = seats_price[11]
+            standing_ticket = seats_price[12]
+            price_standing_ticket = seats_price[13]
+
+            if premium_soft_sleeper is not None:
+                st.caption(
+                    f"premium_class_seat: **_{premium_soft_sleeper}_** price_premium_class_seat:**_{price_premium_soft_sleeper}_**")
+            if soft_sleeper is not None:
+                st.caption(
+                    f"soft_sleeper: **_{soft_sleeper}_** price_soft_sleeper:**_{price_soft_sleeper}_**")
+            if hard_sleeper is not None:
+                st.caption(
+                    f"hard_sleeper: **_{hard_sleeper}_** price_hard_sleeper:**_{price_hard_sleeper}_**")
+            if hard_seat is not None:
+                st.caption(
+                    f"hard_seat: **_{hard_seat}_** price_hard_seat:**_{price_hard_seat}_**")
+            if soft_seat is not None:
+                st.caption(
+                    f"soft_seat: **_{soft_seat}_** price_soft_seat:**_{price_soft_seat}_**")
+            if standing_ticket is not None:
+                st.caption(
+                    f"standing_ticket: **_{standing_ticket}_** price_standing_ticket:**_{price_standing_ticket}_**")
+
+
+        #seats = query(seats_remains_price)
+        #st.write(seats)
         with st.expander("detail"):
             try:
                 stations = query(stations).values.tolist()  # dataframe
                 print(stations)
             except:
-                st.write("Sorry! Something went wrong with your query, please try again.")
-                print("Sorry! Something went wrong with your query, please try again.")
+                st.write("Sorry! Something went wrong with your stations query, please try again.")
+                print("Sorry! Something went wrong with your stations query, please try again.")
+
+            # the following sql and statement are to find the seat_remains and the price of the ticket
+            
+            
+
             col1, col2 = st.columns([3, 1])
             path = [{"path":[]}]
             for object in stations:
@@ -318,6 +384,7 @@ if search:
                 path[0].get("path").append([station_loc.longitude, station_loc.latitude])
                 arrive_time = object[2]
                 col2.caption(f"{station_no} {station_name} **_{arrive_time.strftime('%H:%M')}_**")
+
             # print(path)
             # From_ch = From[From.find('(') + 1: -1]
             # To_ch = To[To.find('(') + 1: -1]
