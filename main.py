@@ -6,6 +6,7 @@ import pydeck as pdk
 import numpy as np
 from geopy.geocoders import Nominatim
 from PIL import Image
+from functools import partial
 import json
 
 
@@ -90,6 +91,10 @@ search = st.sidebar.button('Search')
 if search:
     # refresh
     placeholder.empty()
+
+    gps = Nominatim(user_agent='http')
+    geocode = partial(gps.geocode, language="zh-hans")
+
     print(order)
     try:
         if order == "Departure Time":
@@ -111,7 +116,7 @@ if search:
 
     for item in trains:
 
-        gps = Nominatim(user_agent='http')
+
 
         train = item[0]
         train_cod = item[1]
