@@ -215,7 +215,7 @@ if search:
     print(order)
     print(options)
     try:
-        if len(options)==2:
+        if len(options) == 2:
             trains = query(train_no).values.tolist()
         else:
             if options[0] == "High Speed":
@@ -236,10 +236,10 @@ if search:
     except:
         if len(options) == 0:
             st.warning("You should choose at least one train type!")
-        if len(trains) == 0 :
-            if transfer == False:
-                st.warning("Sorry, there is no train that fits your requirements.\n Please click \'transfer accepted\' button for more information")
-
+        if len(trains) == 0:
+            if not transfer:
+                st.warning(
+                    "Sorry, there is no train that fits your requirements.\n Please click \'transfer accepted\' button for more information")
 
     for item in trains:
 
@@ -250,19 +250,24 @@ if search:
         depart_time = item[2]
         arr_time = item[3]
         tra_time = str(item[4])
-        if(tra_time[0]=='-'):
+        #print(type(item[4]), item[4].hours)
+        if tra_time[0] == '-':
             tra_time = tra_time[1:]
+            tra_time = f"{tra_time[-8:]} (+ 1 day -> { (date+datetime.timedelta(days = 1)).strftime('%Y-%m-%d')} )"
+        else:
+            tra_time = tra_time[-8:]
+        #print("加号：",tra_time.index('+'))
         print(tra_time)
 
         # query stations via this trip
-        stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
+        stations = f"select tp.station_name, tp.station_no, case when tp.arrive_time is not null then tp.arrive_time else tp.start_time end from time_price tp where tp.train_no = '{train}'\
                         and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
                         and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
-
-
         st.subheader(f"{train_cod}")
-        st.caption(f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_** Travel Time:**_{str(tra_time)}_**")
-
+        cola, colb = st.columns([2, 2])
+        cola.caption(
+            f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_**")
+        cola.caption(f"Travel Time:**_{str(tra_time)}_**")
         if type_train == 'G' or type_train == 'D':
 
             seats_remains_price_highspeed = f"select tp.train_no, r.date,\
@@ -281,7 +286,7 @@ if search:
             except:
                 st.write("Sorry! Something went wrong with your seats_remains_price_highspeed query, please try again.")
                 print("Sorry! Something went wrong with your seats_remains_price_highspeed query, please try again.")
-                    
+
             print(seats_price)
             seats_price = seats_price[0]
             premium_class_seat = seats_price[6]
@@ -294,17 +299,17 @@ if search:
             price_standing_ticket = seats_price[5]
 
             if premium_class_seat is not None:
-                st.caption(
-                    f"premium_class_seat: **_{premium_class_seat}_** price_premium_class_seat:**_{price_premium_class_seat}_**")
+                colb.caption(
+                    f" VIP seat: **_￥{price_premium_class_seat}_** {premium_class_seat} left")
             if business_class_seat is not None:
-                st.caption(
-                    f"business_class_seat: **_{business_class_seat}_** price_business_class_seat:**_{price_business_class_seat}_**")
+                colb.caption(
+                    f"business-class seat: **_￥{price_business_class_seat}_** [{business_class_seat} left]")
             if second_class_seat is not None:
-                st.caption(
-                    f"second_class_seat: **_{second_class_seat}_** price_second_class_seat:**_{price_second_class_seat}_**")
+                colb.caption(
+                    f"second-class seat: **_￥{price_second_class_seat}_** [{second_class_seat} left]")
             if standing_ticket is not None:
-                st.caption(
-                    f"standing_ticket: **_{standing_ticket}_** price_standing_ticket:**_{price_standing_ticket}_**")
+                colb.caption(
+                    f"standing ticket: **_￥{price_standing_ticket}_** [{standing_ticket} left]")
 
 
         else:
@@ -324,11 +329,11 @@ if search:
             except:
                 st.write("Sorry! Something went wrong with your seats_remains_price_normal query, please try again.")
                 print("Sorry! Something went wrong with your seats_remains_price_normal query, please try again.")
-                    
-            print(seats_price)  
+
+            print(seats_price)
             seats_price = seats_price[0]
             premium_soft_sleeper = seats_price[2]
-            price_premium_soft_sleeper = seats_price[3]          
+            price_premium_soft_sleeper = seats_price[3]
             soft_sleeper = seats_price[4]
             price_soft_sleeper = seats_price[5]
             hard_sleeper = seats_price[6]
@@ -341,27 +346,26 @@ if search:
             price_standing_ticket = seats_price[13]
 
             if premium_soft_sleeper is not None:
-                st.caption(
-                    f"premium_class_seat: **_{premium_soft_sleeper}_** price_premium_class_seat:**_{price_premium_soft_sleeper}_**")
+                colb.caption(
+                    f"VIP seat: **_ ￥{price_premium_soft_sleeper}_** [{premium_soft_sleeper} left]")
             if soft_sleeper is not None:
-                st.caption(
-                    f"soft_sleeper: **_{soft_sleeper}_** price_soft_sleeper:**_{price_soft_sleeper}_**")
+                colb.caption(
+                    f"soft sleeper: **_ ￥{price_soft_sleeper}_** [{soft_sleeper} left]")
             if hard_sleeper is not None:
-                st.caption(
-                    f"hard_sleeper: **_{hard_sleeper}_** price_hard_sleeper:**_{price_hard_sleeper}_**")
+                colb.caption(
+                    f"hard sleeper: **_ ￥{price_hard_sleeper}_** [{hard_sleeper} left]")
             if hard_seat is not None:
-                st.caption(
-                    f"hard_seat: **_{hard_seat}_** price_hard_seat:**_{price_hard_seat}_**")
+                colb.caption(
+                    f"hard seat: **_ ￥{price_hard_seat}_** [{hard_seat} left]")
             if soft_seat is not None:
-                st.caption(
-                    f"soft_seat: **_{soft_seat}_** price_soft_seat:**_{price_soft_seat}_**")
+                colb.caption(
+                    f"soft seat: **_ ￥{price_soft_seat}_** [{soft_seat} left]")
             if standing_ticket is not None:
-                st.caption(
-                    f"standing_ticket: **_{standing_ticket}_** price_standing_ticket:**_{price_standing_ticket}_**")
+                colb.caption(
+                    f"standing ticket: **_￥{price_standing_ticket}_** [{standing_ticket} left]")
 
-
-        #seats = query(seats_remains_price)
-        #st.write(seats)
+        # seats = query(seats_remains_price)
+        # st.write(seats)
         with st.expander("detail"):
             try:
                 stations = query(stations).values.tolist()  # dataframe
@@ -371,11 +375,9 @@ if search:
                 print("Sorry! Something went wrong with your stations query, please try again.")
 
             # the following sql and statement are to find the seat_remains and the price of the ticket
-            
-            
 
             col1, col2 = st.columns([3, 1])
-            path = [{"path":[]}]
+            path = [{"path": []}]
             for object in stations:
                 station_no = object[1]
                 station_name = object[0]
@@ -430,14 +432,14 @@ if search:
                 ],
             ))
 
-        st.markdown('***')
+        # st.markdown('***')
 print(transfer)
 if transfer and search:
     print(1)
     placeholder.empty()
     data = query(train_transfer)
     st.write(data)
-    #col2.button('Buy', key=f'String{row[0]}')
+    # col2.button('Buy', key=f'String{row[0]}')
 
     # # draw Map
     # From_ch = From[From.find('(') + 1: -1]
@@ -488,7 +490,7 @@ if transfer and search:
     #         ],
     #     ))
 if Analytic:
-    #refresh
+    # refresh
     placeholder.empty()
     rank_for_train = f"Select station_name, count(*) from time_price group by station_name order by count(*) desc limit 10"
     try:
@@ -507,12 +509,11 @@ if Analytic:
 
     st.header(f"Top 10 busiest station in the country")
     df1 = pd.DataFrame({
-    'first column': arr1,
-    'second column': arr2,
+        'first column': arr1,
+        'second column': arr2,
     })
 
     st.write(df1)
-
 
     all_train_times = f"Select station_name, count(*) from time_price group by station_name"
     try:
@@ -529,14 +530,14 @@ if Analytic:
 
     num_arr = np.array(arr)
     print(num_arr)
-    chart_data = pd.DataFrame(num_arr,columns=["numbers of the trains"])
+    chart_data = pd.DataFrame(num_arr, columns=["numbers of the trains"])
 
     st.bar_chart(chart_data)
-    #names = arr1
-    #nums = arr2
-    #plt.bar(names, nums)
-    #plt.show()
-    #st.pyplot(plt)
+    # names = arr1
+    # nums = arr2
+    # plt.bar(names, nums)
+    # plt.show()
+    # st.pyplot(plt)
 if Schedule:
     placeholder.empty()
     print(date_to_check)
@@ -555,11 +556,6 @@ if Schedule:
     print(all_trains)
 
     st.header(f"{station}")
-    st.subheader(f"Schdule date: **_{date_to_check.strftime('%Y-%m-%d')}_**")     
-
+    st.subheader(f"Schdule date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
 
     st.write(all_trains)
-        
-
-
-
