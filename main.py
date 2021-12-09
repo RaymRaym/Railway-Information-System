@@ -7,10 +7,11 @@ import numpy as np
 from geopy.geocoders import Nominatim
 from PIL import Image
 from functools import partial
+#import st_state_patch
 import matplotlib.pyplot as plt
 import json
 
-
+@st.cache
 def query(sql: str):
     # connect to an existing database
     conn = psycopg2.connect("dbname=yp2212_db user=yp2212 host=localhost")
@@ -31,11 +32,10 @@ def query(sql: str):
     df = pd.DataFrame(data=data, columns=column_names)
     return df
 
-
 # empty place holder
 img = Image.open('bg.PNG')
 placeholder = st.empty()
-placeholder.image(img, width=660)
+#placeholder.image(img, width=660)
 
 # left sidebar
 
@@ -197,21 +197,21 @@ where a.transfer_station = b.transfer_station and a.arrive_time<b.start_time and
 # remainingseats\r\n" + "where \r\n" + "train_no=?\r\n" + "and date=" + date + "\r\n" + "and station_no >= \r\n" + "(
 # select station_no from time_price where train_no=? and station_name=?)\r\n" + "and station_no < \r\n" + "(select
 # station_no from time_price where train_no=? and  station_name=?)"
+trains = []
 search = st.sidebar.button('Search')
 date_to_check = st.sidebar.date_input("Date_to_check", datetime.date.today())
 station = st.sidebar.selectbox("station", stations)
-Analytic = st.sidebar.button('Analytic')
-Schedule = st.sidebar.button('Schedule')
+#trainn = st.sidebar.selectbox("Choose a train", trains)
 
 print(search)
 # search button listener
 if search:
     # refresh
-    placeholder.empty()
+    #placeholder.empty()
 
     gps = Nominatim(user_agent='http')
     geocode = partial(gps.geocode, language="zh-hans")
-    trains = []
+
     print(order)
     print(options)
     try:
@@ -256,7 +256,6 @@ if search:
             tra_time = f"{tra_time[-8:]} (+ 1 day -> { (date+datetime.timedelta(days = 1)).strftime('%Y-%m-%d')} )"
         else:
             tra_time = tra_time[-8:]
-        #print("加号：",tra_time.index('+'))
         print(tra_time)
 
         # query stations via this trip
@@ -264,7 +263,7 @@ if search:
                         and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
                         and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
         st.subheader(f"{train_cod}")
-        cola, colb = st.columns([2, 2])
+        cola, colb= st.columns([2, 2])
         cola.caption(
             f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_**")
         cola.caption(f"Travel Time:**_{str(tra_time)}_**")
@@ -297,6 +296,15 @@ if search:
             price_second_class_seat = seats_price[9]
             standing_ticket = seats_price[4]
             price_standing_ticket = seats_price[5]
+
+            def change():
+                st.write(123)
+            #st.selectbox("choose type", ['VIP seat','business-class seat','second-class seat', 'standing ticket'], key='ticket_type', on_change=change())
+
+            #button("Buy now!", f"{train}A")
+
+            print(st.session_state)
+
 
             if premium_class_seat is not None:
                 colb.caption(
@@ -344,6 +352,13 @@ if search:
             price_soft_seat = seats_price[11]
             standing_ticket = seats_price[12]
             price_standing_ticket = seats_price[13]
+
+            # ticket_seat = colc.selectbox("choose a seat",
+            #                              ['VIP seat', 'soft sleeper', 'hard sleeper', 'hard seat', 'soft seat', 'standing ticket'], key=train_cod)
+            # colc.button("Buy now!", train)
+            # print(ticket_seat)
+            # name = st.button("test")
+
 
             if premium_soft_sleeper is not None:
                 colb.caption(
@@ -433,10 +448,12 @@ if search:
             ))
 
         # st.markdown('***')
+st.sidebar.selectbox("train", trains[0], key='tr')
+
 print(transfer)
 if transfer and search:
     print(1)
-    placeholder.empty()
+    #placeholder.empty()
     data = query(train_transfer)
     st.write(data)
     # col2.button('Buy', key=f'String{row[0]}')
@@ -489,9 +506,10 @@ if transfer and search:
     #             ),
     #         ],
     #     ))
+Analytic = st.sidebar.button('Analytic')
 if Analytic:
     # refresh
-    placeholder.empty()
+    #placeholder.empty()
     rank_for_train = f"Select station_name, count(*) from time_price group by station_name order by count(*) desc limit 10"
     try:
         Ranks = query(f"{rank_for_train}").values.tolist()
@@ -538,8 +556,10 @@ if Analytic:
     # plt.bar(names, nums)
     # plt.show()
     # st.pyplot(plt)
+
+Schedule = st.sidebar.button('Schedule')
 if Schedule:
-    placeholder.empty()
+    #placeholder.empty()
     print(date_to_check)
     print(station)
     try:
