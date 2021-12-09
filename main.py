@@ -304,10 +304,12 @@ for item in trains:
 
         # def change():
         #     st.write(123)
-        colc.selectbox("choose type", ['VIP seat','business-class seat','second-class seat', 'standing ticket'], key='ticket_type')
+        colc.selectbox("choose type", ['VIP seat','business-class seat','second-class seat', 'standing ticket'], key=f"{train}type")
         users = query("select name from users")
-        user = colc.selectbox("User", users)
-        colc.button("Buy now!", f"{train}A")
+        user = colc.selectbox("User", users, key=f"{train}user")
+        colc.button("Buy now!", f"{train}buy")
+        if st.session_state[f"{train}buy"]:
+            print("买了！")
 
         print(st.session_state)
 
@@ -360,10 +362,13 @@ for item in trains:
         price_standing_ticket = seats_price[13]
 
         colc.selectbox("choose a seat",
-                                      ['VIP seat', 'soft sleeper', 'hard sleeper', 'hard seat', 'soft seat', 'standing ticket'], key=train_cod)
+                                      ['VIP seat', 'soft sleeper', 'hard sleeper', 'hard seat', 'soft seat', 'standing ticket'], key=f"{train}type")
         users = query("select name from users")
         user = colc.selectbox("User", users, key= f"{train}user")
-        colc.button("Buy now!", train)
+        colc.button("Buy now!", key=f"{train}buy")
+
+        if st.session_state[f"{train}buy"]:
+            print("买了！")
         # print(ticket_seat)
         # name = st.button("test")
 
