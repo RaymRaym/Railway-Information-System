@@ -32,6 +32,22 @@ def query(sql: str):
     df = pd.DataFrame(data=data, columns=column_names)
     return df
 
+@st.cache
+def insert(sql: str):
+    # connect to an existing database
+    conn = psycopg2.connect("dbname=yp2212_db user=yp2212 host=localhost")
+    print("conn")
+    # Open a cursor to perform database operations
+    cur = conn.cursor()
+    print("cur")
+    # Execute a command: this creates a new table
+    cur.execute(sql)
+    # Make the changes to the database persistent
+    conn.commit()
+    # Close communication with the database
+    cur.close()
+    conn.close()
+
 # empty place holder
 img = Image.open('bg.PNG')
 placeholder = st.empty()
@@ -310,6 +326,8 @@ for item in trains:
         colc.button("Buy now!", f"{train}buy")
         if st.session_state[f"{train}buy"]:
             print("买了！")
+            buy_ticket = f"insert into users values ('Rui','1234')"
+            query(buy_ticket)
 
         print(st.session_state)
 
