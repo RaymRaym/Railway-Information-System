@@ -198,10 +198,8 @@ where a.transfer_station = b.transfer_station and a.arrive_time<b.start_time and
 # select station_no from time_price where train_no=? and station_name=?)\r\n" + "and station_no < \r\n" + "(select
 # station_no from time_price where train_no=? and  station_name=?)"
 search = st.sidebar.button('Search')
-date_to_check = st.sidebar.date_input("Date_to_check", datetime.date.today())
-station = st.sidebar.selectbox("station", stations)
-Analytic = st.sidebar.button('Analytic')
-Schedule = st.sidebar.button('Schedule')
+
+
 
 print(search)
 # search button listener
@@ -300,7 +298,7 @@ if search:
 
             if premium_class_seat is not None:
                 colb.caption(
-                    f" VIP seat: **_￥{price_premium_class_seat}_** {premium_class_seat} left")
+                    f" VIP seat: **_￥{price_premium_class_seat}_** {premium_class_seat} left")  
             if business_class_seat is not None:
                 colb.caption(
                     f"business-class seat: **_￥{price_business_class_seat}_** [{business_class_seat} left]")
@@ -489,73 +487,133 @@ if transfer and search:
     #             ),
     #         ],
     #     ))
+date_to_check = st.sidebar.date_input("Date_to_check", datetime.date.today())
+station = st.sidebar.selectbox("station", stations)
+Analytic = st.sidebar.button('Analytic')
+
 if Analytic:
     # refresh
-    placeholder.empty()
-    rank_for_train = f"Select station_name, count(*) from time_price group by station_name order by count(*) desc limit 10"
-    try:
-        Ranks = query(f"{rank_for_train}").values.tolist()
-    except:
-        st.write("Sorry! Something went wrong with your query, please try again.")
-        print("Sorry! Something went wrong with your query, please try again.")
-
-    print(Ranks)
-    arr1 = []
-    arr2 = []
-    for item in Ranks:
-        print(item[0])
-        arr1.append(item[0])
-        arr2.append(item[1])
-
-    st.header(f"Top 10 busiest station in the country")
-    df1 = pd.DataFrame({
-        'first column': arr1,
-        'second column': arr2,
-    })
-
-    st.write(df1)
-
-    all_train_times = f"Select station_name, count(*) from time_price group by station_name"
-    try:
-        numbers = query(f"{all_train_times}").values.tolist()
-    except:
-        st.write("Sorry! Something went wrong with your query, please try again.")
-        print("Sorry! Something went wrong with your query, please try again.")
-
-    arr = []
-    for item in numbers:
-        arr.append(item[1])
-
-    st.header(f"the communities in every cities distribution")
-
-    num_arr = np.array(arr)
-    print(num_arr)
-    chart_data = pd.DataFrame(num_arr, columns=["numbers of the trains"])
-
-    st.bar_chart(chart_data)
-    # names = arr1
-    # nums = arr2
-    # plt.bar(names, nums)
-    # plt.show()
-    # st.pyplot(plt)
-if Schedule:
     placeholder.empty()
     print(date_to_check)
     print(station)
     try:
         find = f"select ttp.train_no, t.code, ttp.arrive_time, ttp.start_time\
-                      from train_time_price ttp, schedule s, train t where ttp.train_no = s.train_no\
-                      and ttp.station_name = '{station}' and CAST(s.date AS DATE) = '{date_to_check.strftime('%Y-%m-%d')}'\
-                      and ttp.train_no = t.train_no"
+                        from train_time_price ttp, schedule s, train t where ttp.train_no = s.train_no\
+                        and ttp.station_name = '{station}' and CAST(s.date AS DATE) = '{date_to_check.strftime('%Y-%m-%d')}'\
+                        and ttp.train_no = t.train_no"
         print(find)
         all_trains = query(f"{find}")
+        print(all_trains)
+        st.header(f"{station}")
+        st.subheader(f"schedule date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
+        st.write(all_trains)
+
+    except:
+        st.write("Sorry! Something went wrong with your query, please try again.")
+        print("Sorry! Something went wrong with your query, please try again.")
+        
+    
+
+    stations_aim = f"select tp2.station_name \
+        from(Select distinct r1.train_no, t.code \
+             from remainingseats r1, remainingseats r2, train t\
+             where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date_to_check.strftime('%Y-%m-%d')}'\
+             and r1.station_name = '{station}'\
+            and r2.station_no >= r1.station_no and r1.train_no = t.train_no) x, time_price tp1, time_price tp2\
+        where x.train_no = tp1.train_no\
+        and tp1.train_no = tp2.train_no\
+        and tp1.station_name = '{station}'\
+        and tp1.station_no < tp2.station_no"
+        
+    try:
+        print(stations_aim)
+        stations_aims = query(stations_aim).values.tolist()
+        st.header(f"all the origin stations for {station} on date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
+        st.write(stations_aims)
+            
+    except:
+        st.write("Sorry! Something went wrong with your stations_aim query, please try again.")
+        print("Sorry! Something went wrong with your stations_aim query, please try again.")
+
+
+
+    stations_origin = f"select tp1.station_name\
+        from(Select distinct r1.train_no, t.code\
+             from remainingseats r1, remainingseats r2, train t\
+             where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date_to_check.strftime('%Y-%m-%d')}'\
+             and r2.station_name = '{station}'\
+            and r2.station_no >= r1.station_no and r1.train_no = t.train_no) y, time_price tp1, time_price tp2 \
+        where y.train_no = tp1.train_no \
+        and tp1.train_no = tp2.train_no \
+        and tp2.station_name = '{station}' \
+        and tp1.station_no < tp2.station_no"
+
+    try:
+        print(stations_origin)
+        stations_origins = query(stations_origin).values.tolist()
+        st.header(f"all the stations can go to from {station} on date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
+        st.write(stations_origins)
+
+    except:
+        st.write("Sorry! Something went wrong with your stations_origin query, please try again.")
+        print("Sorry! Something went wrong with your stations_origin query, please try again.")
+
+    
+
+    #the sql about aim_station/origin_station
+
+number = st.sidebar.text_input("the numbers of the cities train times n")
+train_times = st.sidebar.button('train_times')
+
+if train_times:
+    rank_for_train = f"Select station_name, count(*) from time_price group by station_name order by count(*) desc limit {number}"
+    try:
+        print(rank_for_train)
+        Ranks = query(rank_for_train).values.tolist()
+        print(Ranks)
+        arr1 = []
+        arr2 = []
+        for item in Ranks:
+            print(item[0])
+            arr1.append(item[0])
+            arr2.append(item[1])
+
+        st.header(f"Top {number} busiest station in the country")
+        df1 = pd.DataFrame({
+        'first column': arr1,
+        'second column': arr2,
+        })
+
+        st.write(df1)
     except:
         st.write("Sorry! Something went wrong with your query, please try again.")
         print("Sorry! Something went wrong with your query, please try again.")
 
-    print(all_trains)
+    
 
-    st.header(f"{station}")
-    st.subheader(f"Schdule date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
+    all_train_times = f"Select station_name, count(*) from time_price group by station_name"
+    try:
+        numbers = query(f"{all_train_times}").values.tolist()
+        arr = []
+        for item in numbers:
+            arr.append(item[1])
 
-    st.write(all_trains)
+        st.header(f"the communities in every cities distribution")
+
+        num_arr = np.array(arr)
+        print(num_arr)
+        chart_data = pd.DataFrame(num_arr, columns=["numbers of the trains"])
+
+        st.bar_chart(chart_data)
+    except:
+        st.write("Sorry! Something went wrong with your query, please try again.")
+        print("Sorry! Something went wrong with your query, please try again.")
+
+    
+    # names = arr1
+    # nums = arr2
+    # plt.bar(names, nums)
+    # plt.show()
+    # st.pyplot(plt)
+
+    
