@@ -62,7 +62,7 @@ stations = query("select name from station order by name;")
 st.sidebar.markdown("## China Railway")
 From = st.sidebar.selectbox("From", stations)
 To = st.sidebar.selectbox("To", stations)
-date = st.sidebar.date_input("Date", datetime.date.today())
+date = st.sidebar.date_input("choose date from 2021-6-20 ~ 2021-7-20", datetime.date(2021,6,20))
 
 options = st.sidebar.multiselect("Preferred type",
                                  ['High Speed', 'Regular'])
@@ -182,7 +182,11 @@ gps = Nominatim(user_agent='http')
 geocode = partial(gps.geocode, language="zh-hans")
 # a = query("select * from remainingseats where train_no= '55000000G602' and station_name='Suzhoubei(苏州北)' and station_no = 2 and CAST(date AS DATE) = '2021-07-01';")
 # st.write(a)
-
+st.info("**NOTION!!!!!!**")
+st.caption("**1.Main cities in China will have more trains on a specific day. You'd better choose stations as following, so you can see the great results\
+             of the train ticket system: Shanghaihongqiao, Beijingxi, Chengdudong, Tianjinxi, Changshanan, Shenzhenxi, Guangzhounan, Chongqingbei, Shenyang, Wuhan**")
+st.caption("**2.After buying a ticket, If the number of tickets left does not change, it's normal. Clear cache and rerun the app!**")
+st.caption("**3.We build a very large database. So please wait for a while until all the results rendered.**")
 print(order)
 print(options)
 try:
@@ -291,44 +295,54 @@ for item in trains:
         price['second-class seat'] = price_second_class_seat
         price['standing ticket'] = price_standing_ticket
 
+        types = []
+        if premium_class_seat is not None:
+            colb.caption(
+                f" VIP seat: **_￥{price_premium_class_seat}_** [{premium_class_seat} left]")
+            types.append('VIP seat')
+        if business_class_seat is not None:
+            colb.caption(
+                f"business-class seat: **_￥{price_business_class_seat}_** [{business_class_seat} left]")
+            types.append('business-class seat')
+        if second_class_seat is not None:
+            colb.caption(
+                f"second-class seat: **_￥{price_second_class_seat}_** [{second_class_seat} left]")
+            types.append('second-class seat')
+        if standing_ticket is not None:
+            colb.caption(
+                f"standing ticket: **_￥{price_standing_ticket}_** [{standing_ticket} left]")
+            types.append('standing ticket')
+
         # def change():
         #     st.write(123)
-        colc.selectbox("choose type", ['VIP seat','business-class seat','second-class seat', 'standing ticket'], key=f"{train}type")
+        colc.selectbox("choose type", types, key=f"{train}type")
         users = query("select name from users")
         colc.selectbox("User", users, key=f"{train}user")
         colc.button("Buy now!", f"{train}buy")
         if st.session_state[f"{train}buy"]:
             # insert_users = f"insert into users values ('Rui','1234')"
-            user = st.session_state[f"{train}user"]
-            type = st.session_state[f"{train}type"]
-            buy_ticket = f"insert into ticket values ({time.time()}, '{user}', '{train}', '{train_cod}','{date.strftime('%Y-%m-%d')}','{From}','{depart_time}','{To}','{arr_time}','{type}','{price[type]}')"
-            edit(buy_ticket)
-            for object in stations:
-                station_no = object[1]
-                station_name = object[0]
-                arrive_time = object[2]
-                update_seats = f"update remainingseats set {seatmap[type]}={seatmap[type]}-1 where train_no= '{train}' and station_name='{station_name}' and station_no = {station_no} and CAST(date AS DATE) = '{date.strftime('%Y-%m-%d')}'"
-                print(update_seats)
-                edit(update_seats)
-                print("修改了！")
-            st.success(f"Success! User {user} successfully booked a ticket from {From} to {To} on {date.strftime('%Y-%m-%d')} type: {type} price:{price[type]}")
-            print("买了！")
+            try:
+                user = st.session_state[f"{train}user"]
+                type = st.session_state[f"{train}type"]
+                buy_ticket = f"insert into ticket values ({time.time()}, '{user}', '{train}', '{train_cod}','{date.strftime('%Y-%m-%d')}','{From}','{depart_time}','{To}','{arr_time}','{type}','{price[type]}')"
+                edit(buy_ticket)
+                for object in stations:
+                    station_no = object[1]
+                    station_name = object[0]
+                    arrive_time = object[2]
+                    update_seats = f"update remainingseats set {seatmap[type]}={seatmap[type]}-1 where train_no= '{train}' and station_name='{station_name}' and station_no = {station_no} and CAST(date AS DATE) = '{date.strftime('%Y-%m-%d')}'"
+                    print(update_seats)
+                    edit(update_seats)
+                    print("修改了！")
+                st.success(f"Success! User {user} successfully booked a ticket from {From} to {To} on {date.strftime('%Y-%m-%d')} type: {type} price:{price[type]}")
+                print("买了！")
+            except:
+                st.error("A user can only buy one ticket for the same train on the same day!!!")
 
         #print(st.session_state)
 
 
-        if premium_class_seat is not None:
-            colb.caption(
-                f" VIP seat: **_￥{price_premium_class_seat}_** [{premium_class_seat} left]")
-        if business_class_seat is not None:
-            colb.caption(
-                f"business-class seat: **_￥{price_business_class_seat}_** [{business_class_seat} left]")
-        if second_class_seat is not None:
-            colb.caption(
-                f"second-class seat: **_￥{price_second_class_seat}_** [{second_class_seat} left]")
-        if standing_ticket is not None:
-            colb.caption(
-                f"standing ticket: **_￥{price_standing_ticket}_** [{standing_ticket} left]")
+
 
 
     else:
@@ -379,8 +393,33 @@ for item in trains:
         seatmap['soft seat'] = 'a2'
         seatmap['standing ticket'] = 'wz'
 
+        types = []
+        if premium_soft_sleeper is not None:
+            colb.caption(
+                f"VIP seat: **_ ￥{price_premium_soft_sleeper}_** [{premium_soft_sleeper} left]")
+            types.append('VIP seat')
+        if soft_sleeper is not None:
+            colb.caption(
+                f"soft sleeper: **_ ￥{price_soft_sleeper}_** [{soft_sleeper} left]")
+            types.append('soft sleeper')
+        if hard_sleeper is not None:
+            colb.caption(
+                f"hard sleeper: **_ ￥{price_hard_sleeper}_** [{hard_sleeper} left]")
+            types.append('hard sleeper')
+        if hard_seat is not None:
+            colb.caption(
+                f"hard seat: **_ ￥{price_hard_seat}_** [{hard_seat} left]")
+            types.append('hard seat')
+        if soft_seat is not None:
+            colb.caption(
+                f"soft seat: **_ ￥{price_soft_seat}_** [{soft_seat} left]")
+            types.append('soft seat')
+        if standing_ticket is not None:
+            colb.caption(
+                f"standing ticket: **_￥{price_standing_ticket}_** [{standing_ticket} left]")
+            types.append('standing ticket')
         colc.selectbox("choose a seat",
-                                      ['VIP seat', 'soft sleeper', 'hard sleeper', 'hard seat', 'soft seat', 'standing ticket'], key=f"{train}type")
+                                      types, key=f"{train}type")
 
         users = query("select name from users")
         colc.selectbox("User", users, key=f"{train}user")
@@ -407,28 +446,11 @@ for item in trains:
         # name = st.button("test")
 
 
-        if premium_soft_sleeper is not None:
-            colb.caption(
-                f"VIP seat: **_ ￥{price_premium_soft_sleeper}_** [{premium_soft_sleeper} left]")
-        if soft_sleeper is not None:
-            colb.caption(
-                f"soft sleeper: **_ ￥{price_soft_sleeper}_** [{soft_sleeper} left]")
-        if hard_sleeper is not None:
-            colb.caption(
-                f"hard sleeper: **_ ￥{price_hard_sleeper}_** [{hard_sleeper} left]")
-        if hard_seat is not None:
-            colb.caption(
-                f"hard seat: **_ ￥{price_hard_seat}_** [{hard_seat} left]")
-        if soft_seat is not None:
-            colb.caption(
-                f"soft seat: **_ ￥{price_soft_seat}_** [{soft_seat} left]")
-        if standing_ticket is not None:
-            colb.caption(
-                f"standing ticket: **_￥{price_standing_ticket}_** [{standing_ticket} left]")
+
 
     # seats = query(seats_remains_price)
     # st.write(seats)
-    with st.expander("detail"):
+    with st.expander("SHOW THE TRIP"):
 
         # the following sql and statement are to find the seat_remains and the price of the ticket
 
@@ -488,7 +510,7 @@ for item in trains:
             ],
         ))
 
-        # st.markdown('***')
+    st.markdown('***')
 # st.sidebar.markdown("## Ticket")
 # users = query("select name from users")
 # user = st.sidebar.selectbox("User", users)
@@ -612,8 +634,9 @@ if AllSearch:
             f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_**")
         colb.caption(f"Travel Time:**_{str(tra_time)}_**")
 st.sidebar.markdown("## Statistics")
-date_to_check = st.sidebar.date_input("Date_to_check", datetime.date.today())
-station = st.sidebar.selectbox("station", stations)
+date_to_check = st.sidebar.date_input("choose date from 2021-6-20 ~ 2021-7-20", datetime.date(2021,6,20), key= 'yp')
+stations1 = query("select name from station order by name;")
+station = st.sidebar.selectbox("station", stations1)
 Analytic = st.sidebar.button('Analytic')
 
 if Analytic:
@@ -652,7 +675,7 @@ if Analytic:
         
     try:
         print(stations_aim)
-        stations_aims = query(stations_aim).values.tolist()
+        stations_aims = query(stations_aim)
         st.header(f"all the origin stations for {station} on date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
         st.write(stations_aims)
             
@@ -675,7 +698,7 @@ if Analytic:
 
     try:
         print(stations_origin)
-        stations_origins = query(stations_origin).values.tolist()
+        stations_origins = query(stations_origin)
         st.header(f"all the stations can go to from {station} on date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
         st.write(stations_origins)
 
@@ -687,8 +710,8 @@ if Analytic:
 
     #the sql about aim_station/origin_station
 
-number = st.sidebar.text_input("the numbers of the cities train times n")
-train_times = st.sidebar.button('train_times')
+number = st.sidebar.slider("Show top n busiest stations in China",1,100,10)
+train_times = st.sidebar.button('show')
 
 if train_times:
     rank_for_train = f"Select station_name, count(*) from time_price group by station_name order by count(*) desc limit {number}"
