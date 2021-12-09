@@ -173,10 +173,6 @@ where a.transfer_station = b.transfer_station and a.arrive_time<b.start_time and
 # station_no from time_price where train_no=? and  station_name=?)"
 trains = []
 
-st.sidebar.markdown("## Statistics")
-date_to_check = st.sidebar.date_input("Date_to_check", datetime.date.today())
-station = st.sidebar.selectbox("station", stations)
-
 # search button listener
 # if search:
     # refresh
@@ -560,13 +556,71 @@ if transfer:
     #         ],
     #     ))
 
+st.sidebar.markdown("#### search all stations in the city")
+AllSearch = st.sidebar.button('AllSearch')
+
+if AllSearch:
+    print(From)
+    print(To)
+    placeholder.empty()
+    try:
+        train_all_stations_at_city = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arrive_time-tp1.start_time, tp1.station_name, tp2.station_name as travel \
+            from(Select distinct r1.train_no, t.code \
+                from remainingseats r1, remainingseats r2, train t \
+                where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
+                and r1.station_name like '{From.split('(')[0]}%' and r2.station_name like '{To.split('(')[0]}%'\
+                and r2.station_no >= r1.station_no and r1.train_no = t.train_no) x, time_price tp1, time_price tp2 \
+            where x.train_no = tp1.train_no\
+            and tp1.train_no = tp2.train_no\
+            and tp1.station_name like '{From.split('(')[0]}%'\
+            and tp2.station_name like '{To.split('(')[0]}%'"
+        print(train_all_stations_at_city)
+        data_train_1 = query(train_all_stations_at_city).values.tolist()
+        #st.write(data_train_1)
+    except:
+        st.write("Sorry! Something went wrong with train_all_stations_at_city query, please try again.")
+        print("Sorry! Something went wrong with train_all_stations_at_city query, please try again.")
+
+    for item in data_train_1:
+
+        train = item[0]
+        train_cod = item[1]
+        depart_time = item[2]
+        arr_time = item[3]
+        tra_time = str(item[4])
+        stations_from = item[5]
+        stations_to = item[6]
+        #print(type(item[4]), item[4].hours)
+        if tra_time[0] == '-':
+            tra_time = tra_time[1:]
+            tra_time = f"{tra_time[-8:]} (+ 1 day -> { (date+datetime.timedelta(days = 1)).strftime('%Y-%m-%d')} )"
+        else:
+            tra_time = tra_time[-8:]
+        #print("加号：",tra_time.index('+'))
+        print(tra_time)
+
+        # query stations via this trip
+        #stations = f"select tp.station_name, tp.station_no, case when tp.arrive_time is not null then tp.arrive_time else tp.start_time end from time_price tp where tp.train_no = '{train}'\
+        #                and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
+        #                and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
+        st.subheader(f"{train_cod}")
+        cola, colb = st.columns([2, 2])
+        #cola.caption(f"stations_from: {stations_from} stations_to: {stations_to}")
+        cola.caption(f"stations_from: {stations_from}")
+        colb.caption(f"stations_to: {stations_to}")
+        cola.caption(
+            f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_**")
+        colb.caption(f"Travel Time:**_{str(tra_time)}_**")
+st.sidebar.markdown("## Statistics")
+date_to_check = st.sidebar.date_input("Date_to_check", datetime.date.today())
+station = st.sidebar.selectbox("station", stations)
 Analytic = st.sidebar.button('Analytic')
 
 if Analytic:
     # refresh
     placeholder.empty()
-    #print(date_to_check)
-    #print(station)
+    print(date_to_check)
+    print(station)
     try:
         find = f"select ttp.train_no, t.code, ttp.arrive_time, ttp.start_time\
                         from train_time_price ttp, schedule s, train t where ttp.train_no = s.train_no\
@@ -687,8 +741,7 @@ if train_times:
     # plt.show()
     # st.pyplot(plt)
 
-Schedule = st.sidebar.button('Schedule')
-if Schedule:
+    
     #placeholder.empty()
     print(date_to_check)
     print(station)
