@@ -7,6 +7,7 @@ import numpy as np
 from geopy.geocoders import Nominatim
 from PIL import Image
 from functools import partial
+import time
 #import st_state_patch
 import matplotlib.pyplot as plt
 import json
@@ -214,15 +215,11 @@ where a.transfer_station = b.transfer_station and a.arrive_time<b.start_time and
 # select station_no from time_price where train_no=? and station_name=?)\r\n" + "and station_no < \r\n" + "(select
 # station_no from time_price where train_no=? and  station_name=?)"
 trains = []
-st.session_state['tra'] = []
-search = st.sidebar.button('Search')
-
 
 st.sidebar.markdown("## Statistics")
 date_to_check = st.sidebar.date_input("Date_to_check", datetime.date.today())
 station = st.sidebar.selectbox("station", stations)
 
-print(search)
 # search button listener
 # if search:
     # refresh
@@ -265,7 +262,7 @@ for item in trains:
     train = item[0]
 
     train_cod = item[1]
-    st.session_state['tra'].append(train_cod)
+    #st.session_state['tra'].append(train_cod)
     type_train = train_cod[0:1]
     print(type_train)
     depart_time = item[2]
@@ -308,6 +305,7 @@ for item in trains:
             print("Sorry! Something went wrong with your seats_remains_price_highspeed query, please try again.")
 
         print(seats_price)
+
         seats_price = seats_price[0]
         premium_class_seat = seats_price[6]
         price_premium_class_seat = seats_price[7]
@@ -317,17 +315,26 @@ for item in trains:
         price_second_class_seat = seats_price[9]
         standing_ticket = seats_price[4]
         price_standing_ticket = seats_price[5]
+        price = {}
+        price['VIP seat'] = price_premium_class_seat
+        price['business-class seat'] = price_business_class_seat
+        price['second-class seat'] = price_second_class_seat
+        price['standing ticket'] = price_standing_ticket
 
         # def change():
         #     st.write(123)
         colc.selectbox("choose type", ['VIP seat','business-class seat','second-class seat', 'standing ticket'], key=f"{train}type")
         users = query("select name from users")
-        user = colc.selectbox("User", users, key=f"{train}user")
+        colc.selectbox("User", users, key=f"{train}user")
         colc.button("Buy now!", f"{train}buy")
         if st.session_state[f"{train}buy"]:
+            # insert_users = f"insert into users values ('Rui','1234')"
+            user = st.session_state[f"{train}user"]
+            type = st.session_state[f"{train}type"]
+            buy_ticket = f"insert into ticket values ({time.time()}, '{user}', '{train}', '{train_cod}','{date.strftime('%Y-%m-%d')}','{From}','{depart_time}','{To}','{arr_time}','{type}','{price[type]}')"
+            insert(buy_ticket)
+            st.success(f"Success! User {user} successfully booked a ticket from {From} to {To} on {date.strftime('%Y-%m-%d')} type: {type} price:{price[type]}")
             print("买了！")
-            buy_ticket = f"insert into users values ('Rui','1234')"
-            query(buy_ticket)
 
         print(st.session_state)
 
@@ -378,12 +385,29 @@ for item in trains:
         price_soft_seat = seats_price[11]
         standing_ticket = seats_price[12]
         price_standing_ticket = seats_price[13]
+        price = {}
+        price['VIP seat'] = price_premium_soft_sleeper
+        price['soft sleeper'] = price_soft_sleeper
+        price['hard sleeper'] = price_hard_sleeper
+        price['hard seat'] = price_hard_seat
+        price['soft seat'] = price_soft_seat
+        price['standing ticket'] = price_standing_ticket
 
         colc.selectbox("choose a seat",
                                       ['VIP seat', 'soft sleeper', 'hard sleeper', 'hard seat', 'soft seat', 'standing ticket'], key=f"{train}type")
+
         users = query("select name from users")
-        user = colc.selectbox("User", users, key= f"{train}user")
-        colc.button("Buy now!", key=f"{train}buy")
+        colc.selectbox("User", users, key=f"{train}user")
+        colc.button("Buy now!", f"{train}buy")
+        if st.session_state[f"{train}buy"]:
+            # insert_users = f"insert into users values ('Rui','1234')"
+            user = st.session_state[f"{train}user"]
+            type = st.session_state[f"{train}type"]
+            buy_ticket = f"insert into ticket values ({time.time()}, '{user}', '{train}', '{train_cod}','{date.strftime('%Y-%m-%d')}','{From}','{depart_time}','{To}','{arr_time}','{type}','{price[type]}')"
+            insert(buy_ticket)
+            st.success(
+                f"Success! User {user} successfully booked a ticket from {From} to {To} on {date.strftime('%Y-%m-%d')} type: {type} price:{price[type]}")
+            print("买了！")
 
         if st.session_state[f"{train}buy"]:
             print("买了！")
