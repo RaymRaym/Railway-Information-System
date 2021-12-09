@@ -743,23 +743,7 @@ if train_times:
 
     
     #placeholder.empty()
-    print(date_to_check)
-    print(station)
-    try:
-        find = f"select ttp.train_no, t.code, ttp.arrive_time, ttp.start_time\
-                      from train_time_price ttp, schedule s, train t where ttp.train_no = s.train_no\
-                      and ttp.station_name = '{station}' and CAST(s.date AS DATE) = '{date_to_check.strftime('%Y-%m-%d')}'\
-                      and ttp.train_no = t.train_no"
-        print(find)
-        all_trains = query(f"{find}")
-    except:
-        st.write("Sorry! Something went wrong with your query, please try again.")
-        print("Sorry! Something went wrong with your query, please try again.")
-
-    print(all_trains)
-
-    st.header(f"{station}")
-    st.subheader(f"Schdule date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
+    
 
 
     
