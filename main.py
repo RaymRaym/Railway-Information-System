@@ -199,8 +199,11 @@ where a.transfer_station = b.transfer_station and a.arrive_time<b.start_time and
 # station_no from time_price where train_no=? and  station_name=?)"
 trains = []
 search = st.sidebar.button('Search')
+st.sidebar.markdown("##Ticket")
 users = query("select name from users")
 user = st.sidebar.selectbox("User", users)
+train_codee = st.sidebar.text_input("Choose a train")
+buy = st.sidebar.button('Buy now!')
 
 date_to_check = st.sidebar.date_input("Date_to_check", datetime.date.today())
 station = st.sidebar.selectbox("station", stations)
