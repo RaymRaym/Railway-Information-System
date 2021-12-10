@@ -64,7 +64,7 @@ From = st.sidebar.selectbox("From", stations)
 To = st.sidebar.selectbox("To", stations)
 date = st.sidebar.date_input("choose date from 2021-6-20 ~ 2021-7-20", datetime.date(2021,6,20))
 
-options = st.sidebar.multiselect("Preferred type",
+options = st.sidebar.multiselect("Train type",
                                  ['High Speed', 'Regular'])
 transfer = st.sidebar.checkbox("Transfer accepted")
 order = st.sidebar.radio("Sort by:", ("Departure Time", "Arrival Time"))
@@ -135,42 +135,7 @@ from (select x.train_no, x.code, tp1.start_time, tp1.station_name as depart_stat
         and tp1.station_no<tp2.station_no) b \
 where a.transfer_station = b.transfer_station and a.arrive_time<b.start_time and a.train_no!=b.train_no"
 
-# train_no_transfer = f"Select x.train_no1, x.train_no2, x.code1, x.code2, tp1.start_time, tp2.arrive_time, tp3.start_time, tp4.arrive_time, tp4.arrive_time-tp1.start_time as travel, tp3.station_name as transfer_name \
-#     from(Select distinct r1.train_no as train_no1, r3.train_no as train_no2, t1.code as code1, t3.code as code2 \
-#         from remainingseats r1, remainingseats r2, remainingseats r3, remainingseats r4, train t1, train t3 \
-#         where r1.train_no = r2.train_no and r3.train_no = r4.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}' \
-#         and r2.date = r3.date and r2.arrive_time < r3.arrive_time and r1.station_name = '{From}' and r4.station_name = '{To}' \
-#         and r3.train_no = t3.train_no and r2.station_name = r3.station_name and r2.station_no > r1.station_no and r4.station_no > r3.station_no \
-#         and r1.train_no = t1.train_no) x, time_price tp1, time_price tp2, time_price tp3, time_price tp4 \
-#     where x.train_no1 = tp1.train_no and x.train_no2 = tp3.train_no \
-#     and tp1.train_no = tp2.train_no and tp3.train_no = tp4.train_no \
-#     and tp1.station_name = '{From}'\
-#     and tp2.station_name = tp3.station_name \
-#     and tp4.station_name = '{To}'"
 
-# for train in train_no:
-#     stations = f"select tp.station_name, tp.station_no, tp.arrive_time from time_price tp where tp.train_no = '{train}'\
-#             and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
-#             and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}')"
-#
-#     #这里可以打印出来每一个train——no对应的某一天这个车次我们查询的两地之间，剩余的可买车票数以及对应车票的价格
-#     seats_remains_price = f"select tp.train_no, r.date, min(r.a9) as business_class_seat,\
-#             sum(tp.a9) as price_business_class_seat, min(r.a6) as premium_soft_sleeper, sum(tp.a6) as price_premium_soft_sleeper,\
-#             min(r.a4) as soft_sleeper, sum(tp.a4) as price_soft_sleeper, min(r.a3) as hard_sleeper, sum(tp.a3) as price_hard_sleeper,\
-#             min(r.a1) as hard_seat, sum(tp.a1) as price_hard_seat, min(r.a2) as soft_seat, sum(tp.a2) as price_soft_seat,\
-#             min(r.wz) as standing_ticket, sum(tp.wz) as price_standing_ticket, min(r.p) as premium_class_seat,\
-#             sum(tp.p) as price_premium_class_seat, min(r.m) as first_class_seat, sum(tp.m) as price_first_class_seat,\
-#             min(r.o) as second_class_seat, sum(tp.o) as price_second_class_seat\
-#             from remainingseats r, time_price tp where tp.train_no = '{train}'\
-#             and tp.station_no >= (select station_no from time_price where train_no = '{train}' and station_name = '{From}')\
-#             and tp.station_no <= (select station_no from time_price where train_no = '{train}' and station_name = '{To}' and tp.station_no = r.station_no)\
-#             and tp.train_no = r.train_no and CAST(r.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
-#             group by tp.train_no, r.date"
-
-# ticket = "SELECT min(A9), min(P),min(M),min(O),min(A6),min(A4),min(A3),min(A2),min(A1),min(WZ),min(MIN) FROM
-# remainingseats\r\n" + "where \r\n" + "train_no=?\r\n" + "and date=" + date + "\r\n" + "and station_no >= \r\n" + "(
-# select station_no from time_price where train_no=? and station_name=?)\r\n" + "and station_no < \r\n" + "(select
-# station_no from time_price where train_no=? and  station_name=?)"
 trains = []
 
 # search button listener
@@ -182,11 +147,12 @@ gps = Nominatim(user_agent='http')
 geocode = partial(gps.geocode, language="zh-hans")
 # a = query("select * from remainingseats where train_no= '55000000G602' and station_name='Suzhoubei(苏州北)' and station_no = 2 and CAST(date AS DATE) = '2021-07-01';")
 # st.write(a)
-st.info("**NOTION!!!!!!**")
+st.info("**READ ME**")
 st.caption("**1.Main cities in China will have more trains on a specific day. You'd better choose stations as following, so you can see the great results\
              of the train ticket system: Shanghaihongqiao, Beijingxi, Chengdudong, Tianjinxi, Changshanan, Shenzhenxi, Guangzhounan, Chongqingbei, Shenyang, Wuhan**")
-st.caption("**2.After buying a ticket, If the number of tickets left does not change, it's normal. Clear cache and rerun the app!**")
+st.caption("**2.After buying a ticket, If the number of tickets left does not change, it's normal. Clear cache and rerun the app! If you make any change to the data in the database, please clear cache and rerun the app to see the results!**")
 st.caption("**3.We build a very large database. So please wait for a while until all the results rendered.**")
+
 print(order)
 print(options)
 try:
@@ -210,11 +176,11 @@ try:
     #print(trains[0])
 except:
     if len(options) == 0:
-        st.warning("You should choose at least one train type!")
+        st.warning("If you want to buy a direct ticket, you should choose at least one train type!")
     if len(trains) == 0:
         if not transfer:
             st.warning(
-                "Sorry, there is no train that fits your requirements.\n Please click \'transfer accepted\' button for more information")
+                "You can choose transfer accepted for more results, only if you can't find a direct trip.")
 
 for item in trains:
 
@@ -529,54 +495,34 @@ if transfer:
     st.write(data)
     # col2.button('Buy', key=f'String{row[0]}')
 
-    # # draw Map
-    # From_ch = From[From.find('(') + 1: -1]
-    # To_ch = To[To.find('(') + 1: -1]
-    # print(From_ch)
-    # print(To_ch)
-    # gps = Nominatim(user_agent='http')
-    # loc_from = gps.geocode(From_ch)
-    # loc_to = gps.geocode(To_ch)
-    # pts = [[loc_from.latitude, loc_from.longitude, loc_to.latitude, loc_to.longitude]]
-    # dots = [[loc_from.latitude, loc_from.longitude], [loc_to.latitude, loc_to.longitude]]
-    #
-    # line = pd.DataFrame(
-    #     np.asarray(pts),
-    #     columns=['from_lat', 'from_lon', 'to_lat', 'to_lon'])
-    #
-    # df = pd.DataFrame(
-    #     np.asarray(dots),
-    #     columns=['lat', 'lon'])
-    #
-    # with st.expander("Show the trip"):
-    #     st.pydeck_chart(pdk.Deck(
-    #         map_style='mapbox://styles/mapbox/navigation-night-v1',
-    #         # map_style='https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-    #         initial_view_state=pdk.ViewState(
-    #             latitude=31,
-    #             longitude=115,
-    #             zoom=2.5,
-    #             pitch=0,
-    #         ),
-    #         layers=[
-    #             pdk.Layer(
-    #                 'ScatterplotLayer',
-    #                 data=df,
-    #                 get_position='[lon, lat]',
-    #                 get_fill_color='[200, 30, 0, 160]',
-    #                 get_radius=40000,
-    #             ),
-    #             pdk.Layer(
-    #                 'LineLayer',
-    #                 data=line,
-    #                 get_line_color='[200, 30, 0, 160]',
-    #                 get_sourcePosition='[from_lon, from_lat]',
-    #                 get_targetPosition='[to_lon, to_lat]',
-    #                 get_color='[200, 30, 0, 160]',
-    #                 get_width=5,
-    #             ),
-    #         ],
-    #     ))
+st.sidebar.markdown("## User tickets")
+users = query("select name from users;")
+ti_user = st.sidebar.selectbox("Choose a user", users)
+st.sidebar.button("search order", key='sch')
+if st.session_state.sch:
+    user_tickets = f"select * from ticket where user_name = '{ti_user}'"
+    tickets = query(user_tickets).values.tolist()
+    #st.write(tickets)
+    print(tickets)
+    if len(tickets)==0:
+        st.info("No purchase history.")
+    for item in tickets:
+        time_local = time.localtime(item[0])
+        or_time = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+        train_cod = item[3]
+        train_date = item[4]
+        from_station = item[5]
+        start_time = item[6]
+        to_station = item[7]
+        arr_time = item[8]
+        seat = item[9]
+        price = item[10]
+
+
+        st.caption(f"User:**{ti_user}** bought a ticket at **{or_time}** for train:**{train_cod}**")
+        st.caption(f"depart at:**{train_date} {start_time}** from:**_{from_station}_** to:**_{to_station}_**  arrive at:_{arr_time}_")
+        st.caption(f"seat type:**{seat}** price:**￥{price}**")
+        st.markdown("***")
 
 st.sidebar.markdown("#### search all stations in the city")
 AllSearch = st.sidebar.button('AllSearch')
