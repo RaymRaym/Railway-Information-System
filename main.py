@@ -150,8 +150,9 @@ geocode = partial(gps.geocode, language="zh-hans")
 st.info("**READ ME**")
 st.caption("**1.Main cities in China will have more trains on a specific day. You'd better choose stations as following, so you can see the great results\
              of the train ticket system: Shanghaihongqiao, Beijingxi, Chengdudong, Tianjinxi, Changshanan, Shenzhenxi, Guangzhounan, Chongqingbei, Shenyang, Wuhan**")
-st.caption("**2.After buying a ticket, If the number of tickets left does not change, it's normal. Clear cache and rerun the app! If you make any change to the data in the database, please clear cache and rerun the app to see the results!**")
-st.caption("**3.We build a very large database. So please wait for a while until all the results rendered.**")
+st.caption("**2.If you want to buy ticekt, select the Train type, if you want to see our Statistic, do not select the Train type!**")
+st.caption("**3.After buying a ticket, If the number of tickets left does not change, it's normal. Clear cache and rerun the app! If you make any change to the data in the database, please clear cache and rerun the app to see the results!**")
+st.caption("**4.We build a very large database. So please wait for a while until all the results rendered.**")
 
 print(order)
 print(options)
@@ -524,24 +525,29 @@ if st.session_state.sch:
         st.caption(f"seat type:**{seat}** price:**￥{price}**")
         st.markdown("***")
 
+st.sidebar.markdown("## Statistics")
 st.sidebar.markdown("#### search all stations in the city")
+cities = ['Shanghai', 'Beijing', 'Chengdu', 'Wuhan', 'Changsha','Guangzhou','Shenzhen','Jinan','Nanjing','Hangzhou','Heilongjiang','Guizhou','Yunnan','Xian','Tianjing','Shijiazhunag']
+From_city = st.sidebar.selectbox("From_city", cities)
+To_city = st.sidebar.selectbox("To_city", cities)
+on_date = st.sidebar.date_input("choose On_Date from 2021-6-20 ~ 2021-7-20", datetime.date.today())
 AllSearch = st.sidebar.button('AllSearch')
 
 if AllSearch:
-    print(From)
-    print(To)
+    print(From_city)
+    print(To_city)
     placeholder.empty()
     try:
         train_all_stations_at_city = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arrive_time-tp1.start_time, tp1.station_name, tp2.station_name as travel \
             from(Select distinct r1.train_no, t.code \
                 from remainingseats r1, remainingseats r2, train t \
-                where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{date.strftime('%Y-%m-%d')}'\
-                and r1.station_name like '{From.split('(')[0]}%' and r2.station_name like '{To.split('(')[0]}%'\
+                where r1.train_no = r2.train_no and CAST(r1.date AS DATE) = '{on_date.strftime('%Y-%m-%d')}'\
+                and r1.station_name like '{From_city.split('(')[0]}%' and r2.station_name like '{To_city.split('(')[0]}%'\
                 and r2.station_no >= r1.station_no and r1.train_no = t.train_no) x, time_price tp1, time_price tp2 \
             where x.train_no = tp1.train_no\
             and tp1.train_no = tp2.train_no\
-            and tp1.station_name like '{From.split('(')[0]}%'\
-            and tp2.station_name like '{To.split('(')[0]}%'"
+            and tp1.station_name like '{From_city.split('(')[0]}%'\
+            and tp2.station_name like '{To_city.split('(')[0]}%'"
         print(train_all_stations_at_city)
         data_train_1 = query(train_all_stations_at_city).values.tolist()
         #st.write(data_train_1)
@@ -579,7 +585,7 @@ if AllSearch:
         cola.caption(
             f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_**")
         colb.caption(f"Travel Time:**_{str(tra_time)}_**")
-st.sidebar.markdown("## Statistics")
+
 date_to_check = st.sidebar.date_input("choose date from 2021-6-20 ~ 2021-7-20", datetime.date(2021,6,20), key= 'yp')
 stations1 = query("select name from station order by name;")
 station = st.sidebar.selectbox("station", stations1)
@@ -712,7 +718,4 @@ if train_times:
 
     
     #placeholder.empty()
-    
-
-
     
