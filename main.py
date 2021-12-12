@@ -8,6 +8,7 @@ from geopy.geocoders import Nominatim
 from PIL import Image
 from functools import partial
 import time
+import pytz
 #import st_state_patch
 import matplotlib.pyplot as plt
 import json
@@ -60,13 +61,14 @@ placeholder = st.empty()
 stations = query("select name from station order by name;")
 
 st.sidebar.markdown("## China Railway")
+st.sidebar.markdown("trains from station to station")
 From = st.sidebar.selectbox("From", stations)
 To = st.sidebar.selectbox("To", stations)
 date = st.sidebar.date_input("choose date from 2021-6-20 ~ 2021-7-20", datetime.date(2021,6,20))
 
 options = st.sidebar.multiselect("Train type",
                                  ['High Speed', 'Regular'])
-transfer = st.sidebar.checkbox("Transfer accepted")
+transfer = st.sidebar.checkbox("Transfer Suggestion")
 order = st.sidebar.radio("Sort by:", ("Departure Time", "Arrival Time"))
 
 # train_no = f"Select distinct r1.train_no, t.code from remainingseats r1, remainingseats r2, train t\
@@ -150,12 +152,12 @@ geocode = partial(gps.geocode, language="zh-hans")
 st.info("**READ ME**")
 st.caption("**1.Main cities in China will have more trains on a specific day. You'd better choose stations as following, so you can see the great results\
              of the train ticket system: Shanghaihongqiao, Beijingxi, Chengdudong, Tianjinxi, Changshanan, Shenzhenxi, Guangzhounan, Chongqingbei, Shenyang, Wuhan**")
-st.caption("**2.If you want to buy ticekt, select the Train type, if you want to see our Statistic, do not select the Train type!**")
+st.caption("**2.If you want to buy ticket, select the Train type, if you want to see our Statistic, do not select the Train type!**")
 st.caption("**3.After buying a ticket, If the number of tickets left does not change, it's normal. Clear cache and rerun the app! If you make any change to the data in the database, please clear cache and rerun the app to see the results!**")
 st.caption("**4.We build a very large database. So please wait for a while until all the results rendered.**")
 
-print(order)
-print(options)
+#print(order)
+#print(options)
 try:
     if len(options) == 2:
         trains = query(train_no).values.tolist()
@@ -218,7 +220,7 @@ for item in trains:
         #print(stations)
     except:
         st.write("Sorry! Something went wrong with your stations query, please try again.")
-        print("Sorry! Something went wrong with your stations query, please try again.")
+        #print("Sorry! Something went wrong with your stations query, please try again.")
 
     if type_train == 'G' or type_train == 'D':
         # query seat
@@ -237,9 +239,9 @@ for item in trains:
             seats_price = query(seats_remains_price_highspeed).values.tolist()  # dataframe
         except:
             st.write("Sorry! Something went wrong with your seats_remains_price_highspeed query, please try again.")
-            print("Sorry! Something went wrong with your seats_remains_price_highspeed query, please try again.")
+            #print("Sorry! Something went wrong with your seats_remains_price_highspeed query, please try again.")
 
-        print(seats_price)
+        #print(seats_price)
 
         seats_price = seats_price[0]
         premium_class_seat = seats_price[6]
@@ -291,14 +293,14 @@ for item in trains:
             try:
                 user = st.session_state[f"{train}user"]
                 type = st.session_state[f"{train}type"]
-                buy_ticket = f"insert into ticket values ({time.time()}, '{user}', '{train}', '{train_cod}','{date.strftime('%Y-%m-%d')}','{From}','{depart_time}','{To}','{arr_time}','{type}','{price[type]}')"
+                buy_ticket = f"insert into ticket values ({time.time()-3600*5}, '{user}', '{train}', '{train_cod}','{date.strftime('%Y-%m-%d')}','{From}','{depart_time}','{To}','{arr_time}','{type}','{price[type]}')"
                 edit(buy_ticket)
                 for object in stations:
                     station_no = object[1]
                     station_name = object[0]
                     arrive_time = object[2]
                     update_seats = f"update remainingseats set {seatmap[type]}={seatmap[type]}-1 where train_no= '{train}' and station_name='{station_name}' and station_no = {station_no} and CAST(date AS DATE) = '{date.strftime('%Y-%m-%d')}'"
-                    print(update_seats)
+                    #print(update_seats)
                     edit(update_seats)
                     print("修改了！")
                 st.success(f"Success! User {user} successfully booked a ticket from {From} to {To} on {date.strftime('%Y-%m-%d')} type: {type} price:{price[type]}")
@@ -328,7 +330,7 @@ for item in trains:
             seats_price = query(seats_remains_price_normal).values.tolist()  # dataframe
         except:
             st.write("Sorry! Something went wrong with your seats_remains_price_normal query, please try again.")
-            print("Sorry! Something went wrong with your seats_remains_price_normal query, please try again.")
+            #print("Sorry! Something went wrong with your seats_remains_price_normal query, please try again.")
 
         #print(seats_price)
         seats_price = seats_price[0]
@@ -395,14 +397,14 @@ for item in trains:
             # insert_users = f"insert into users values ('Rui','1234')"
             user = st.session_state[f"{train}user"]
             type = st.session_state[f"{train}type"]
-            buy_ticket = f"insert into ticket values ({time.time()}, '{user}', '{train}', '{train_cod}','{date.strftime('%Y-%m-%d')}','{From}','{depart_time}','{To}','{arr_time}','{type}','{price[type]}')"
+            buy_ticket = f"insert into ticket values ({time.time()-3600*5}, '{user}', '{train}', '{train_cod}','{date.strftime('%Y-%m-%d')}','{From}','{depart_time}','{To}','{arr_time}','{type}','{price[type]}')"
             edit(buy_ticket)
             for object in stations:
                 station_no = object[1]
                 station_name = object[0]
                 arrive_time = object[2]
                 update_seats = f"update remainingseats set {seatmap[type]}={seatmap[type]}-1 where train_no= '{train}' and station_name='{station_name}' and station_no = {station_no} and CAST(date AS DATE) = '{date.strftime('%Y-%m-%d')}'"
-                print(update_seats)
+                #print(update_seats)
                 edit(update_seats)
                 print("修改了！")
             st.success(
@@ -488,12 +490,22 @@ for item in trains:
 #     # order sql
 #     # order =f" insert into ticket values "
 #     print(st.session_state)
-print(transfer)
+#print(transfer)
 if transfer:
     print(1)
     #placeholder.empty()
-    data = query(train_transfer)
-    st.write(data)
+    data = query(train_transfer).values.tolist()
+    st.subheader("Following are the available transfer options:")
+    st.write("depart station | first train | depart time | transfer station | transfer time | second train | destination")
+    for obj in data:
+        de_st = obj[0]
+        first = obj[1]
+        time1 = obj[2].strftime('%H:%M')
+        tr_st = obj[3]
+        time2 = obj[4].strftime('%H:%M')
+        second = obj[5]
+        dest = obj[6]
+        st.caption(f"{de_st} |  {first}  | {time1} |  {tr_st}  | {time2}  | {second} |  {dest}")
     # col2.button('Buy', key=f'String{row[0]}')
 
 st.sidebar.markdown("## User tickets")
@@ -509,6 +521,7 @@ if st.session_state.sch:
         st.info("No purchase history.")
     for item in tickets:
         time_local = time.localtime(item[0])
+        print(time_local)
         or_time = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
         train_cod = item[3]
         train_date = item[4]
@@ -526,16 +539,17 @@ if st.session_state.sch:
         st.markdown("***")
 
 st.sidebar.markdown("## Statistics")
-st.sidebar.markdown("#### search all stations in the city")
-cities = ['Shanghai', 'Beijing', 'Chengdu', 'Wuhan', 'Changsha','Guangzhou','Shenzhen','Jinan','Nanjing','Hangzhou','Heilongjiang','Guizhou','Yunnan','Xian','Tianjing','Shijiazhunag']
-From_city = st.sidebar.selectbox("From_city", cities)
-To_city = st.sidebar.selectbox("To_city", cities)
-on_date = st.sidebar.date_input("choose On_Date from 2021-6-20 ~ 2021-7-20", datetime.date.today())
-AllSearch = st.sidebar.button('AllSearch')
+st.sidebar.markdown("#### trains from city to city")
+cities1 = ['Shanghai', 'Beijing', 'Chengdu', 'Wuhan', 'Changsha','Guangzhou','Shenzhen','Jinan','Nanjing','Hangzhou','Heilongjiang','Guizhou','Yunnan','Xian','Tianjing','Shijiazhunag']
+cities2 = ['Beijing', 'Chengdu', 'Wuhan', 'Changsha','Guangzhou','Shenzhen','Jinan','Nanjing','Hangzhou','Heilongjiang','Guizhou','Yunnan','Xian','Tianjing','Shijiazhunag']
+From_city = st.sidebar.selectbox("From_city", cities1)
+To_city = st.sidebar.selectbox("To_city", cities2)
+on_date = st.sidebar.date_input("choose On_Date from 2021-6-20 ~ 2021-7-20", datetime.date(2021,6,20))
+AllSearch = st.sidebar.button('Search all')
 
 if AllSearch:
-    print(From_city)
-    print(To_city)
+    #print(From_city)
+    #print(To_city)
     placeholder.empty()
     try:
         train_all_stations_at_city = f"select x.train_no, x.code, tp1.start_time, tp2.arrive_time, tp2.arrive_time-tp1.start_time, tp1.station_name, tp2.station_name as travel \
@@ -548,12 +562,12 @@ if AllSearch:
             and tp1.train_no = tp2.train_no\
             and tp1.station_name like '{From_city.split('(')[0]}%'\
             and tp2.station_name like '{To_city.split('(')[0]}%'"
-        print(train_all_stations_at_city)
+        #print(train_all_stations_at_city)
         data_train_1 = query(train_all_stations_at_city).values.tolist()
         #st.write(data_train_1)
     except:
         st.write("Sorry! Something went wrong with train_all_stations_at_city query, please try again.")
-        print("Sorry! Something went wrong with train_all_stations_at_city query, please try again.")
+        #print("Sorry! Something went wrong with train_all_stations_at_city query, please try again.")
 
     for item in data_train_1:
 
@@ -571,7 +585,7 @@ if AllSearch:
         else:
             tra_time = tra_time[-8:]
         #print("加号：",tra_time.index('+'))
-        print(tra_time)
+        #print(tra_time)
 
         # query stations via this trip
         #stations = f"select tp.station_name, tp.station_no, case when tp.arrive_time is not null then tp.arrive_time else tp.start_time end from time_price tp where tp.train_no = '{train}'\
@@ -586,31 +600,39 @@ if AllSearch:
             f"Departure Time: **_{depart_time.strftime('%H:%M')}_** Arrival Time:**_{arr_time.strftime('%H:%M')}_**")
         colb.caption(f"Travel Time:**_{str(tra_time)}_**")
 
+st.sidebar.markdown("Search a station")
 date_to_check = st.sidebar.date_input("choose date from 2021-6-20 ~ 2021-7-20", datetime.date(2021,6,20), key= 'yp')
 stations1 = query("select name from station order by name;")
 station = st.sidebar.selectbox("station", stations1)
-Analytic = st.sidebar.button('Analytic')
+Analytic = st.sidebar.button('get information')
 
 if Analytic:
     # refresh
     placeholder.empty()
-    print(date_to_check)
-    print(station)
-    try:
-        find = f"select ttp.train_no, t.code, ttp.arrive_time, ttp.start_time\
-                        from train_time_price ttp, schedule s, train t where ttp.train_no = s.train_no\
-                        and ttp.station_name = '{station}' and CAST(s.date AS DATE) = '{date_to_check.strftime('%Y-%m-%d')}'\
-                        and ttp.train_no = t.train_no"
-        print(find)
-        all_trains = query(f"{find}")
-        print(all_trains)
-        st.header(f"{station}")
-        st.subheader(f"schedule date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
-        st.write(all_trains)
-
-    except:
-        st.write("Sorry! Something went wrong with your query, please try again.")
-        print("Sorry! Something went wrong with your query, please try again.")
+    #print(date_to_check)
+    #print(station)
+    # try:
+    find = f"select ttp.train_no, t.code, ttp.arrive_time, ttp.start_time\
+                    from train_time_price ttp, schedule s, train t where ttp.train_no = s.train_no\
+                    and ttp.station_name = '{station}' and CAST(s.date AS DATE) = '{date_to_check.strftime('%Y-%m-%d')}'\
+                    and ttp.train_no = t.train_no"
+    #print(find)
+    all_trains = query(find).values.tolist()
+    #print(all_trains)
+    st.header(f"{station}")
+    st.subheader(f"schedule date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
+    st.write(
+        "train_no | code | arrive_time | start_time")
+    for obj in all_trains:
+        station_from = obj[0]
+        station_to = obj[1]
+        time1 = obj[2]
+        #print(obj[2])
+        time2 = obj[3]
+        st.caption(f"{station_from} | {station_to} | {time1} | {time2}")
+    # except:
+    #     st.write("Sorry! Something went wrong with your query, please try again.")
+    #     print("Sorry! Something went wrong with your query, please try again.")
         
     
 
@@ -626,14 +648,14 @@ if Analytic:
         and tp1.station_no < tp2.station_no"
         
     try:
-        print(stations_aim)
+        #print(stations_aim)
         stations_aims = query(stations_aim)
         st.header(f"all the origin stations for {station} on date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
         st.write(stations_aims)
             
     except:
         st.write("Sorry! Something went wrong with your stations_aim query, please try again.")
-        print("Sorry! Something went wrong with your stations_aim query, please try again.")
+        #print("Sorry! Something went wrong with your stations_aim query, please try again.")
 
 
 
@@ -649,65 +671,65 @@ if Analytic:
         and tp1.station_no < tp2.station_no"
 
     try:
-        print(stations_origin)
+        #print(stations_origin)
         stations_origins = query(stations_origin)
         st.header(f"all the stations can go to from {station} on date: **_{date_to_check.strftime('%Y-%m-%d')}_**")
         st.write(stations_origins)
 
     except:
         st.write("Sorry! Something went wrong with your stations_origin query, please try again.")
-        print("Sorry! Something went wrong with your stations_origin query, please try again.")
+        #print("Sorry! Something went wrong with your stations_origin query, please try again.")
 
     
 
     #the sql about aim_station/origin_station
-
-number = st.sidebar.slider("Show top n busiest stations in China",1,100,10)
+st.sidebar.markdown("Show top n busiest stations in China")
+number = st.sidebar.slider(" ",1,100,10)
 train_times = st.sidebar.button('show')
 
 if train_times:
     rank_for_train = f"Select station_name, count(*) from time_price group by station_name order by count(*) desc limit {number}"
     try:
-        print(rank_for_train)
+        #print(rank_for_train)
         Ranks = query(rank_for_train).values.tolist()
-        print(Ranks)
+        #print(Ranks)
         arr1 = []
         arr2 = []
         for item in Ranks:
-            print(item[0])
+            #print(item[0])
             arr1.append(item[0])
             arr2.append(item[1])
 
         st.header(f"Top {number} busiest station in the country")
         df1 = pd.DataFrame({
-        'first column': arr1,
-        'second column': arr2,
+        'station': arr1,
+        'the number of trians': arr2,
         })
 
         st.write(df1)
     except:
         st.write("Sorry! Something went wrong with your query, please try again.")
-        print("Sorry! Something went wrong with your query, please try again.")
+        #print("Sorry! Something went wrong with your query, please try again.")
 
     
 
-    all_train_times = f"Select station_name, count(*) from time_price group by station_name"
-    try:
-        numbers = query(f"{all_train_times}").values.tolist()
-        arr = []
-        for item in numbers:
-            arr.append(item[1])
-
-        st.header(f"the communities in every cities distribution")
-
-        num_arr = np.array(arr)
-        print(num_arr)
-        chart_data = pd.DataFrame(num_arr, columns=["numbers of the trains"])
-
-        st.bar_chart(chart_data)
-    except:
-        st.write("Sorry! Something went wrong with your query, please try again.")
-        print("Sorry! Something went wrong with your query, please try again.")
+    # all_train_times = f"Select station_name, count(*) from time_price group by station_name"
+    # try:
+    #     numbers = query(f"{all_train_times}").values.tolist()
+    #     arr = []
+    #     for item in numbers:
+    #         arr.append(item[1])
+    #
+    #     st.header(f"the communities in every cities distribution")
+    #
+    #     num_arr = np.array(arr)
+    #     print(num_arr)
+    #     chart_data = pd.DataFrame(num_arr, columns=["numbers of the trains"])
+    #
+    #     st.bar_chart(chart_data)
+    # except:
+    #     st.write("Sorry! Something went wrong with your query, please try again.")
+    #     print("Sorry! Something went wrong with your query, please try again.")
 
     
     # names = arr1
