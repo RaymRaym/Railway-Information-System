@@ -1,24 +1,8 @@
-# RailwayInformationSystem
-A web data app [ PostgreSQL + Streamlit ]
+## Railway Information System
+![](https://img.shields.io/badge/-Streamlit-brightgreen) ![](https://img.shields.io/badge/-PostgreSQL-blue) ![](https://img.shields.io/badge/-Python-purple)
 
-TO-DO:
-1. 消息框，<数据异常>， <修改失败> etc.弹消息框
-2. ~~只看高铁，动车~~
-3. ~~按照时间降序~~
-4. ~~计算travel time~~
-5. 好看的chart
-6. ~~换乘问题~~
+This is a web data visualization applet about China Railway. All data is real, grabbed from official website 12306. Tourists can order tickets, check tickets and search everything regarding to the trains. What's more, we design nice display of routes to the tourists.
 
 
-Problems so far:
-~~1. 查出来的train_no有重复的~~
 
-~~2. 前端显示时间乱码~~
 
-~~3. 要解析一下train_no,变成常人能看懂的，比如说G123， K456这种~~
-
-~~4. 刚刚说的有的途径站查不出来，为空~~
-
-5.  地图显示路径，暂不急
-6.  travel time 显示问题
-7. 显示票价和对应的票剩余的张数 sql是140行
